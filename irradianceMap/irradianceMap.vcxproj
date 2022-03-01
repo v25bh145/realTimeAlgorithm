@@ -161,6 +161,7 @@
     <None Include="cubemap.vert" />
     <None Include="HDRToCubemap.frag" />
     <None Include="HDRToCubemap.vert" />
+    <None Include="readme.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
