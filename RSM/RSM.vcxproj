@@ -142,7 +142,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\include\camera.cpp" />
     <ClCompile Include="..\include\glad.c" />
+    <ClCompile Include="..\include\mesh.cpp" />
+    <ClCompile Include="..\include\model.cpp" />
     <ClCompile Include="..\include\shader.cpp" />
     <ClCompile Include="..\include\stb_image.cpp" />
     <ClCompile Include="RSM.cpp" />
@@ -160,6 +163,7 @@
     <ClInclude Include="..\include\model.h" />
     <ClInclude Include="..\include\shader.h" />
     <ClInclude Include="..\include\stb_image.h" />
+    <ClInclude Include="..\include\stb_image_write.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

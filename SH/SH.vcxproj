@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{9663b9a2-6a40-41a1-9df2-906cc004a924}</ProjectGuid>
-    <RootNamespace>irradianceMap</RootNamespace>
+    <ProjectGuid>{e4c1a312-ef26-42b6-bec0-f5941a82ca87}</ProjectGuid>
+    <RootNamespace>SH</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -78,8 +78,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <ExternalIncludePath>D:\assimp\include;D:\glm;D:\glad\include;D:\glfw\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
     <LibraryPath>D:\assimp\lib;D:\glfw\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <ExternalIncludePath>D:\assimp\include;D:\glm;D:\glad\include;D:\glfw\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -142,30 +142,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\include\camera.cpp" />
-    <ClCompile Include="..\include\glad.c" />
-    <ClCompile Include="..\include\mesh.cpp" />
-    <ClCompile Include="..\include\model.cpp" />
-    <ClCompile Include="..\include\shader.cpp" />
-    <ClCompile Include="..\include\stb_image.cpp" />
-    <ClCompile Include="irradianceMap.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\include\camera.h" />
     <ClInclude Include="..\include\mesh.h" />
     <ClInclude Include="..\include\model.h" />
     <ClInclude Include="..\include\shader.h" />
     <ClInclude Include="..\include\stb_image.h" />
     <ClInclude Include="..\include\stb_image_write.h" />
+    <ClInclude Include="shDefault.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Chelsea_Stairs_3k.hdr" />
-    <None Include="convolution.frag" />
-    <None Include="cubemap.frag" />
-    <None Include="cubemap.vert" />
-    <None Include="HDRToCubemap.frag" />
-    <None Include="HDRToCubemap.vert" />
-    <None Include="readme.md" />
+    <ClCompile Include="..\include\camera.cpp" />
+    <ClCompile Include="..\include\glad.c" />
+    <ClCompile Include="..\include\mesh.cpp" />
+    <ClCompile Include="..\include\model.cpp" />
+    <ClCompile Include="..\include\shader.cpp" />
+    <ClCompile Include="..\include\stb_image.cpp" />
+    <ClCompile Include="shDefault.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="shAlgorithm.h" />
+    <ClCompile Include="shAlgorithm.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

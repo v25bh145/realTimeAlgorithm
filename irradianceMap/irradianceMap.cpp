@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "../include/stb_image.h"
+#include "../include/stb_image_write.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -196,6 +197,17 @@ int main()
         // input
         // -----
         processInput(window);
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceCubemap);
+            string texName = "irradiance_skybox_0.png";
+            for (int i = 0; i < 6; i++) {
+                unsigned char* data = new unsigned char[512 * 512 * 3];
+                glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+                texName[18] = char(i + 48);
+                stbi_write_png(texName.c_str(), 512, 512, 3, data, 512 * 3);
+            }
+            glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+        }
 
         // render
         // ------
@@ -211,8 +223,8 @@ int main()
         glm::mat4 view = camera.GetViewMatrix();
         cubemap.setMat4("view", view);
         glActiveTexture(GL_TEXTURE0);
-        //glBindTexture(GL_TEXTURE_CUBE_MAP, environmentCubemap);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceCubemap);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, environmentCubemap);
+        //glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceCubemap);
         renderCube();
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -220,8 +232,7 @@ int main()
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    // optional: de-allocate all resources once they've outlived their purpose:
+     //optional: de-allocate all resources once they've outlived their purpose:
 
     glfwTerminate();
     return 0;
