@@ -50,22 +50,22 @@
     <ClCompile Include="shDefault.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\include\stb_image.cpp">
+    <ClCompile Include="..\src\camera.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\include\shader.cpp">
+    <ClCompile Include="..\src\glad.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\include\model.cpp">
+    <ClCompile Include="..\src\mesh.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\include\mesh.cpp">
+    <ClCompile Include="..\src\model.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\include\glad.c">
+    <ClCompile Include="..\src\shader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\include\camera.cpp">
+    <ClCompile Include="..\src\stb_image.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

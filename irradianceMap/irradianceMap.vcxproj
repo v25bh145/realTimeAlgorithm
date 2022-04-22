@@ -142,12 +142,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\include\camera.cpp" />
-    <ClCompile Include="..\include\glad.c" />
-    <ClCompile Include="..\include\mesh.cpp" />
-    <ClCompile Include="..\include\model.cpp" />
-    <ClCompile Include="..\include\shader.cpp" />
-    <ClCompile Include="..\include\stb_image.cpp" />
+    <ClCompile Include="..\src\camera.cpp" />
+    <ClCompile Include="..\src\glad.c" />
+    <ClCompile Include="..\src\mesh.cpp" />
+    <ClCompile Include="..\src\model.cpp" />
+    <ClCompile Include="..\src\shader.cpp" />
+    <ClCompile Include="..\src\stb_image.cpp" />
     <ClCompile Include="irradianceMap.cpp" />
   </ItemGroup>
   <ItemGroup>

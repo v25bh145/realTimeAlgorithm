@@ -15,7 +15,48 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="RSM.cpp">
+    <ClInclude Include="..\include\camera.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\mesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\model.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\shader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\stb_image.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\stb_image_write.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="default.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="renderAlgorithm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="renderPass.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="LPVPass.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="default.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="renderAlgorithm.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="renderPass.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\src\camera.cpp">
@@ -36,42 +77,5 @@
     <ClCompile Include="..\src\stb_image.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="RSMGbuffer.frag">
-      <Filter>源文件</Filter>
-    </None>
-    <None Include="RSMGbuffer.geom">
-      <Filter>源文件</Filter>
-    </None>
-    <None Include="RSMGBuffer.vert">
-      <Filter>源文件</Filter>
-    </None>
-    <None Include="RSMLast.frag">
-      <Filter>源文件</Filter>
-    </None>
-    <None Include="RSMLast.vert">
-      <Filter>源文件</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\include\camera.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\mesh.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\model.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\shader.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\stb_image.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\stb_image_write.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

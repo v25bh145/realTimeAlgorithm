@@ -1,4 +1,4 @@
-#include "model.h"
+#include "../include/model.h"
 // draws the model, and thus all its meshes
 void Model::Draw(Shader& shader)
 {

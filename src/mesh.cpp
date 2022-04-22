@@ -1,4 +1,4 @@
-#include "mesh.h"
+#include "../include/mesh.h"
 // initializes all the buffer objects/arrays
 void Mesh::setupMesh()
 {

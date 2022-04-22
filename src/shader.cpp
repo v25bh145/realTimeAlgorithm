@@ -1,4 +1,4 @@
-#include "shader.h"
+#include "../include/shader.h"
 void Shader::use() {
 	glUseProgram(ID);
 }
