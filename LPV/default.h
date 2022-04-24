@@ -13,6 +13,7 @@
 #include "../include/camera.h"
 #include "../include/model.h"
 #include "../include/stb_image.h"
+#include "texture.h"
 
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 600
@@ -25,6 +26,5 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void updateDeltaTime(float currentFrame);
 void processInput(GLFWwindow* window);
-unsigned int loadTexture(char const* path);
-unsigned int loadCubemap(vector<string> paths, int& imageSize, int& nrComponents, vector<unsigned char*>& datas, bool getData = true);
 GLFWwindow* initWindow();
+Camera* getCamera();

@@ -14,6 +14,7 @@ class Shader {
 public:
 	// program ID
 	unsigned int ID;
+    Shader() {}
 	Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = NULL) {
         // 1. retrieve the vertex/fragment source code from filePath
         std::string vertexCode;

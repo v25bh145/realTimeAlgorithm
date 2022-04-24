@@ -152,6 +152,7 @@
     <ClInclude Include="LPVPass.h" />
     <ClInclude Include="renderAlgorithm.h" />
     <ClInclude Include="renderPass.h" />
+    <ClInclude Include="texture.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\camera.cpp" />
@@ -161,9 +162,20 @@
     <ClCompile Include="..\src\shader.cpp" />
     <ClCompile Include="..\src\stb_image.cpp" />
     <ClCompile Include="default.cpp" />
+    <ClCompile Include="LPVPass.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="renderAlgorithm.cpp" />
     <ClCompile Include="renderPass.cpp" />
+    <ClCompile Include="texture.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="getShadowSample.frag" />
+    <None Include="getShadowSample.geom" />
+    <None Include="getShadowSample.vert" />
+    <None Include="output2D.frag" />
+    <None Include="output2D.vert" />
+    <None Include="outputCubeMap.frag" />
+    <None Include="outputCubeMap.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

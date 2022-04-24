@@ -45,6 +45,9 @@
     <ClInclude Include="LPVPass.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="texture.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -77,5 +80,34 @@
     <ClCompile Include="..\src\stb_image.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="LPVPass.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="texture.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="getShadowSample.vert">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="getShadowSample.frag">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="getShadowSample.geom">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="output2D.vert">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="output2D.frag">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="outputCubeMap.vert">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="outputCubeMap.frag">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

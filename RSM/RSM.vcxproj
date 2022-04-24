@@ -151,6 +151,8 @@
     <ClCompile Include="RSM.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\LPV\outputCubeMap.frag" />
+    <None Include="..\LPV\outputCubeMap.vert" />
     <None Include="RSMGbuffer.frag" />
     <None Include="RSMGbuffer.geom" />
     <None Include="RSMGBuffer.vert" />

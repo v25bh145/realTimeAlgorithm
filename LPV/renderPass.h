@@ -1,16 +1,15 @@
 #pragma once
 #include "default.h"
 class RenderPass {
-private:
+protected:
 	vector<unsigned> passTexture;
 	vector<unsigned> passVAO;
 	int indexInPass;
 
-	unsigned VAO;
-	unsigned shader;
+	Shader shader;
 public:
 	RenderPass(int indexInPass)
-	:indexInPass(indexInPass), passTexture(vector<unsigned>()), passVAO(vector<unsigned>()), VAO(-1), shader(-1) {};
+	:indexInPass(indexInPass), passTexture(vector<unsigned>()), passVAO(vector<unsigned>()) {};
 	virtual ~RenderPass() {}
 	/* =================
 	* before render loop
@@ -23,7 +22,7 @@ public:
 	* in render loop
 	*/
 	// default: this->passVAO = passVAO; this->passTexture = passTexture;
-	virtual void initLastPass(vector<unsigned> passVAO, vector<unsigned> passTexture);
+	virtual void initLastPass(vector<unsigned> passVAO, vector<unsigned> passTexture) = 0;
 	virtual void Render() = 0;
 	virtual unsigned getPassReturn(vector<unsigned>& passVAO, vector<unsigned>& passTexture) = 0;
 	virtual void detachPass() = 0;
