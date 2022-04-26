@@ -26,13 +26,15 @@ uniform float farPlane;
 uniform Light light;
 uniform vec3 viewPos;
 
+uniform sampler2D texture_diffuse1;
+
 const float PI = 3.14159265359;
 const float MAX_THETA = 1.570796326795;
 const float MAX_PHI = 6.28318530718;
 const float gamma = 2.2;
 
 float defaultShadowLight = 0.05f;
-float shadowBias = 0.05f;
+float shadowBias = 0.08f;
 float sampleThetaRange = PI / 5.f;
 float samplePhiRange = PI / 5.f;
 int sampleNum = 50;
@@ -43,37 +45,53 @@ int shadowSamples = 10;
 in VS_OUT {
 	vec3 worldPos;
 	vec3 fNormal;
+	vec2 fTexCoords;
 } fs_in;
 
 void main() {
-	vec3 fragToLight = fs_in.worldPos - light.position;
 
+	vec3 fragToLight = fs_in.worldPos - light.position;
+	
 
 	vec3 fragToLightDir = normalize(fragToLight);
 
 	float currentDepth = length(fragToLight);
+
 	// hard shadow
+
+	// !important BUG
+	//		can correctly run when FragColor = vec4(shadowValue, 1.f, 1.f, 1.f);
+	//		but when connect shadowValue with direct, it comes black and glGetError() returns 1282
+	// error code:
 	//float closestDepth = texture(depthMap, fragToLight).r;
 	//closestDepth *= farPlane;
-	//float shadow = currentDepth - shadowBias > closestDepth ? defaultShadowLight : 1.f;
+	//float shadowValue = (currentDepth - shadowBias) > closestDepth ? 1.f : defaultShadowLight;
+	// revised code:
+	/*
+	vec3 closestWorldPos = texture(worldPosMap, fragToLightDir).xyz;
+	float closestDepth = length(closestWorldPos - light.position);
+	float shadowValue = (currentDepth - shadowBias) > closestDepth ? 1.f : defaultShadowLight;
+	*/
+
 	// soft shadow
-	float shadow = 0.f;
+	
+	float shadowValue = 0.f;
 	for(float x = -shadowOffset; x < shadowOffset; x += 2.f * shadowOffset / shadowSamples){
 		for(float y = -shadowOffset; y < shadowOffset; y += 2.f * shadowOffset / shadowSamples) {
             for(float z = -shadowOffset; z < shadowOffset; z += 2.f * shadowOffset / shadowSamples){
-                float closestDepth = texture(depthMap, fragToLight + vec3(x, y, z)).r; 
-                closestDepth *= farPlane;   // Undo mapping [0;1]
+				vec3 closestWorldPos = texture(worldPosMap, fragToLight + vec3(x, y, z)).xyz; 
+                float closestDepth = length(closestWorldPos - light.position);
                 if(currentDepth - shadowBias > closestDepth)
-                    shadow += 1.f;
+                    shadowValue += 1.f;
 				else
-					shadow += defaultShadowLight;
+					shadowValue += defaultShadowLight;
             }
 		}
 	}
-	shadow /= shadowSamples * shadowSamples * shadowSamples;
+	shadowValue /= shadowSamples * shadowSamples * shadowSamples;
 
-	// simple way to generate color
-	vec3 objColor = abs(fs_in.fNormal) * 0.8f;
+
+	vec3 objColor = texture(texture_diffuse1, fs_in.fTexCoords).xyz;
 
 	float cosTheta = fragToLightDir.z;
 	float sinTheta = sqrt(1 - cosTheta * cosTheta);
@@ -120,9 +138,19 @@ void main() {
 	float spec = pow(max(0, dot(halfwayDir, fs_in.fNormal)), shininess);
 	vec3 specular = spec * light.specular;
 
-	vec3 direct = ((diffuse + specular) * (1.f - shadow) + light.ambient) * objColor;
+	vec3 direct = ((diffuse + specular) * (1.f - shadowValue) + light.ambient) * objColor;
 
-	FragColor = vec4(direct + indirect, 1.f);
-	
+	//FragColor = vec4(direct + indirect, 1.f);
+	// indirect display
+	FragColor = vec4(indirect, 1.f);
+	// direct display
+	//FragColor = vec4(direct, 1.f);
+
 	FragColor.rgb = pow(FragColor.rgb, vec3(1.f / gamma));
+	
+
+	// shadow display
+	/*
+		FragColor = vec4(shadow, 1.f, 1.f, 1.f);
+	*/
 }

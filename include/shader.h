@@ -67,7 +67,7 @@ public:
         glCompileShader(vertex);
         // print compile errors if any
         glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
-        if (!success)
+        if (success != GL_TRUE)
         {
             glGetShaderInfoLog(vertex, 512, NULL, infoLog);
             std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
@@ -79,7 +79,7 @@ public:
         glCompileShader(fragment);
         // print compile errors if any
         glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
-        if (!success)
+        if (success != GL_TRUE)
         {
             glGetShaderInfoLog(fragment, 512, NULL, infoLog);
             std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
@@ -93,7 +93,7 @@ public:
             glCompileShader(geometry);
             // print compile errors if any
             glGetShaderiv(geometry, GL_COMPILE_STATUS, &success);
-            if (!success)
+            if (success != GL_TRUE)
             {
                 glGetShaderInfoLog(geometry, 512, NULL, infoLog);
                 std::cout << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n" << infoLog << std::endl;
@@ -109,7 +109,7 @@ public:
         glLinkProgram(ID);
         // print linking errors if any
         glGetProgramiv(ID, GL_LINK_STATUS, &success);
-        if (!success)
+        if (success != GL_TRUE)
         {
             glGetProgramInfoLog(ID, 512, NULL, infoLog);
             std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;

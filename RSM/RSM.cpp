@@ -20,11 +20,11 @@ void processInput(GLFWwindow* window);
 unsigned int loadTexture(const char* path);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1600;
+const unsigned int SCR_HEIGHT = 900;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(4.0f, 4.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -135.f, -15.f);
 float lastX = (float)SCR_WIDTH / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = true;
@@ -35,7 +35,7 @@ float lastFrame = 0.0f;
 
 // meshes
 unsigned int planeVAO;
-
+// TODO: 把六个深度贴图输出出来
 int main()
 {
     // glfw: initialize and configure
@@ -83,63 +83,66 @@ int main()
     Shader GBufferShader("RSMGBuffer.vert", "RSMGBuffer.frag", "RSMGBuffer.geom");
     Shader shader("RSMLast.vert", "RSMLast.frag");
 
+
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
-    float quadVertices[] = {
-        0.f, 0.f, 0.f,  0.0f, -1.0f, 0.0f,
-        0.f, 0.f, 5.f,  0.0f, -1.0f, 0.0f,
-        5.f, 0.f, 0.f,  0.0f, -1.0f, 0.0f,
-        5.f, 0.f, 5.f,  0.0f, -1.0f, 0.0f
-    };
-    unsigned quadIndices[] = {
-        0, 1, 2,
-        1, 2, 3
-    };
-    // quad VAO
-    unsigned quadVAO, quadVBO, quadEBO;
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
-    glGenBuffers(1, &quadEBO);
-    glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadEBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices), quadIndices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glBindVertexArray(0);
 
-    float boxVertices[] = {
-    0.f, 0.f, 0.f,  0.0f, 1.0f, 0.0f,
-    0.f, 0.f, 1.f,  0.0f, 1.0f, 0.0f,
-    1.f, 0.f, 0.f,  0.0f, 1.0f, 0.0f,
-    1.f, 0.f, 1.f,  0.0f, 1.0f, 0.0f
-    };
-    unsigned boxIndices[] = {
-    0, 1, 2,
-    1, 2, 3
-    };
-    // box VAO
-    unsigned boxVAO, boxVBO, boxEBO;
-    glGenVertexArrays(1, &boxVAO);
-    glGenBuffers(1, &boxVBO);
-    glGenBuffers(1, &boxEBO);
-    glBindVertexArray(boxVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, boxVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(boxVertices), boxVertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, boxEBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(boxIndices), boxIndices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glBindVertexArray(0);
+    Model roomModel("../models/Room/Room #1.obj");
+
+    //float quadVertices[] = {
+    //    0.f, 0.f, 0.f,  0.0f, -1.0f, 0.0f,
+    //    0.f, 0.f, 5.f,  0.0f, -1.0f, 0.0f,
+    //    5.f, 0.f, 0.f,  0.0f, -1.0f, 0.0f,
+    //    5.f, 0.f, 5.f,  0.0f, -1.0f, 0.0f
+    //};
+    //unsigned quadIndices[] = {
+    //    0, 1, 2,
+    //    1, 2, 3
+    //};
+    //// quad VAO
+    //unsigned quadVAO, quadVBO, quadEBO;
+    //glGenVertexArrays(1, &quadVAO);
+    //glGenBuffers(1, &quadVBO);
+    //glGenBuffers(1, &quadEBO);
+    //glBindVertexArray(quadVAO);
+    //glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadEBO);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices), quadIndices, GL_STATIC_DRAW);
+    //glEnableVertexAttribArray(0);
+    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    //glEnableVertexAttribArray(1);
+    //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    //glBindVertexArray(0);
+    //float boxVertices[] = {
+    //0.f, 0.f, 0.f,  0.0f, 1.0f, 0.0f,
+    //0.f, 0.f, 1.f,  0.0f, 1.0f, 0.0f,
+    //1.f, 0.f, 0.f,  0.0f, 1.0f, 0.0f,
+    //1.f, 0.f, 1.f,  0.0f, 1.0f, 0.0f
+    //};
+    //unsigned boxIndices[] = {
+    //0, 1, 2,
+    //1, 2, 3
+    //};
+    //// box VAO
+    //unsigned boxVAO, boxVBO, boxEBO;
+    //glGenVertexArrays(1, &boxVAO);
+    //glGenBuffers(1, &boxVBO);
+    //glGenBuffers(1, &boxEBO);
+    //glBindVertexArray(boxVAO);
+    //glBindBuffer(GL_ARRAY_BUFFER, boxVBO);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(boxVertices), boxVertices, GL_STATIC_DRAW);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, boxEBO);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(boxIndices), boxIndices, GL_STATIC_DRAW);
+    //glEnableVertexAttribArray(0);
+    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    //glEnableVertexAttribArray(1);
+    //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    //glBindVertexArray(0);
 
     // configure depth map FBO
     // -----------------------
-    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
     unsigned RSMFBO;
     glGenFramebuffers(1, &RSMFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, RSMFBO);
@@ -148,6 +151,7 @@ int main()
     glGenTextures(1, &depthMap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, depthMap);
     for (unsigned i = 0; i < 6; ++i) {
+        //glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     }
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -227,12 +231,12 @@ int main()
 
     // lighting info
     // -------------
-    glm::vec3 lightPos(2.5f, 2.0f, 2.5f);
+    glm::vec3 lightPos(7.0f, 5.0f, 5.0f);
 
     // matrix info
     // -----------
     float near_plane = 1.0f;
-    float far_plane = 25.0f;
+    float far_plane = 100.f;
     glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, near_plane, far_plane);
     std::vector<glm::mat4> shadowTransforms;
     shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
@@ -241,52 +245,42 @@ int main()
     shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
     shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
     shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-
-    vector<glm::mat4> quadModelTransforms;
-    glm::mat4 model1(1.f);
-    model1 = glm::translate(model1, { 0.f, 5.f, 0.f });
-    quadModelTransforms.push_back(model1);
-
-    glm::mat4 model2 = glm::rotate(glm::mat4(1.f), glm::radians(180.f), glm::vec3(1.f, 0.f, 0.f));
-    model2 = glm::translate(model2, { 0.f, 0.f, -5.f });
-    quadModelTransforms.push_back(model2);
-
-    glm::mat4 model3 = glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(-1.f, 0.f, 0.f));
-    //model3 = glm::translate(model3, { 0.f, -5.f, 0.f });
-    quadModelTransforms.push_back(model3);
-
-    glm::mat4 model4 = glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f));
-    model4 = glm::translate(model4, { 0.f, 5.f, -5.f });
-    quadModelTransforms.push_back(model4);
-
-    glm::mat4 model5(1.f);
-    quadModelTransforms.push_back(glm::rotate(model5, glm::radians(90.f), glm::vec3(0.f, 0.f, 1.f)));
-
-    vector<glm::mat4> boxModelTransforms;
-    glm::vec3 boxTranslate = { 2.f, 1.f, 1.f };
-
-    glm::mat4 boxModel1 = glm::translate(glm::mat4(1.f), boxTranslate);
-    boxModelTransforms.push_back(boxModel1);
-
-    glm::mat4 boxModel2 = glm::translate(glm::mat4(1.f), boxTranslate);
-    boxModel2 = glm::translate(boxModel2, { 0.f, 0.f, 1.f });
-    boxModel2 = glm::rotate(boxModel2, glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f));
-    boxModelTransforms.push_back(boxModel2);
-
-    glm::mat4 boxModel3 = glm::translate(glm::mat4(1.f), boxTranslate);
-    boxModel3 = glm::translate(boxModel3, { 0.f, -1.f, 0.f });
-    boxModel3 = glm::rotate(boxModel3, glm::radians(270.f), glm::vec3(1.f, 0.f, 0.f));
-    boxModelTransforms.push_back(boxModel3);
-
-    glm::mat4 boxModel4 = glm::translate(glm::mat4(1.f), boxTranslate);
-    boxModel4 = glm::translate(boxModel4, { 1.f, 0.f, 0.f });
-    boxModel4 = glm::rotate(boxModel4, glm::radians(90.f), glm::vec3(0.f, 0.f, -1.f));
-    boxModelTransforms.push_back(boxModel4);
-
-    glm::mat4 boxModel5 = glm::translate(glm::mat4(1.f), boxTranslate);
-    boxModel5 = glm::translate(boxModel5, { 0.f, -1.f, 0.f });
-    boxModel5 = glm::rotate(boxModel5, glm::radians(90.f), glm::vec3(0.f, 0.f, 1.f));
-    boxModelTransforms.push_back(boxModel5);
+    
+    //vector<glm::mat4> quadModelTransforms;
+    //glm::mat4 model1(1.f);
+    //model1 = glm::translate(model1, { 0.f, 5.f, 0.f });
+    //quadModelTransforms.push_back(model1);
+    //glm::mat4 model2 = glm::rotate(glm::mat4(1.f), glm::radians(180.f), glm::vec3(1.f, 0.f, 0.f));
+    //model2 = glm::translate(model2, { 0.f, 0.f, -5.f });
+    //quadModelTransforms.push_back(model2);
+    //glm::mat4 model3 = glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(-1.f, 0.f, 0.f));
+    ////model3 = glm::translate(model3, { 0.f, -5.f, 0.f });
+    //quadModelTransforms.push_back(model3);
+    //glm::mat4 model4 = glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f));
+    //model4 = glm::translate(model4, { 0.f, 5.f, -5.f });
+    //quadModelTransforms.push_back(model4);
+    //glm::mat4 model5(1.f);
+    //quadModelTransforms.push_back(glm::rotate(model5, glm::radians(90.f), glm::vec3(0.f, 0.f, 1.f)));
+    //vector<glm::mat4> boxModelTransforms;
+    //glm::vec3 boxTranslate = { 2.f, 1.f, 1.f };
+    //glm::mat4 boxModel1 = glm::translate(glm::mat4(1.f), boxTranslate);
+    //boxModelTransforms.push_back(boxModel1);
+    //glm::mat4 boxModel2 = glm::translate(glm::mat4(1.f), boxTranslate);
+    //boxModel2 = glm::translate(boxModel2, { 0.f, 0.f, 1.f });
+    //boxModel2 = glm::rotate(boxModel2, glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f));
+    //boxModelTransforms.push_back(boxModel2);
+    //glm::mat4 boxModel3 = glm::translate(glm::mat4(1.f), boxTranslate);
+    //boxModel3 = glm::translate(boxModel3, { 0.f, -1.f, 0.f });
+    //boxModel3 = glm::rotate(boxModel3, glm::radians(270.f), glm::vec3(1.f, 0.f, 0.f));
+    //boxModelTransforms.push_back(boxModel3);
+    //glm::mat4 boxModel4 = glm::translate(glm::mat4(1.f), boxTranslate);
+    //boxModel4 = glm::translate(boxModel4, { 1.f, 0.f, 0.f });
+    //boxModel4 = glm::rotate(boxModel4, glm::radians(90.f), glm::vec3(0.f, 0.f, -1.f));
+    //boxModelTransforms.push_back(boxModel4);
+    //glm::mat4 boxModel5 = glm::translate(glm::mat4(1.f), boxTranslate);
+    //boxModel5 = glm::translate(boxModel5, { 0.f, -1.f, 0.f });
+    //boxModel5 = glm::rotate(boxModel5, glm::radians(90.f), glm::vec3(0.f, 0.f, 1.f));
+    //boxModelTransforms.push_back(boxModel5);
 
     // shader configuration
     // --------------------
@@ -329,8 +323,11 @@ int main()
 
         // render
         // ------
+        glEnable(GL_DEPTH_TEST);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        
 
         // 1. render depth of scene to texture (from light's perspective)
         // --------------------------------------------------------------
@@ -341,29 +338,36 @@ int main()
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, RSMFBO);
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
 
-        glBindVertexArray(quadVAO);
-        for (unsigned i = 0; i < 5; ++i) {
-            glm::mat4 model = quadModelTransforms[i];
-            GBufferShader.setMat4("model", model);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        }
-        glBindVertexArray(0);
-
-        glBindVertexArray(boxVAO);
-        for (unsigned i = 0; i < 5; ++i) {
-            glm::mat4 model = boxModelTransforms[i];
-            GBufferShader.setMat4("model", model);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        }
-        glBindVertexArray(0);
+        //glBindVertexArray(quadVAO);
+        //for (unsigned i = 0; i < 5; ++i) {
+        //    glm::mat4 model = quadModelTransforms[i];
+        //    GBufferShader.setMat4("model", model);
+        //    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        //}
+        //glBindVertexArray(0);
+        //glBindVertexArray(boxVAO);
+        //for (unsigned i = 0; i < 5; ++i) {
+        //    glm::mat4 model = boxModelTransforms[i];
+        //    GBufferShader.setMat4("model", model);
+        //    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        //}
+        //glBindVertexArray(0);
+        GBufferShader.setMat4("model", glm::mat4(1.0f));
+        roomModel.Draw(GBufferShader);
+        // TEST
+        //cout << "1: " << glGetError() << endl;
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        
+
+        
+        
 
         // reset viewport
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
 
         shader.use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -371,6 +375,8 @@ int main()
         shader.setMat4("projection", projection);
         shader.setMat4("view", view);
         shader.setVec3("viewPos", camera.Position);
+
+        shader.setMat4("model", glm::mat4(1.0f));
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, depthMap);
@@ -383,24 +389,24 @@ int main()
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_1D, randomMap);
 
-        glBindVertexArray(quadVAO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadEBO);
-        for (unsigned i = 0; i < 5; ++i) {
-            glm::mat4 model = quadModelTransforms[i];
-            shader.setMat4("model", model);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        }
-        glBindVertexArray(0);
-
-        glBindVertexArray(boxVAO);
-        for (unsigned i = 0; i < 5; ++i) {
-            glm::mat4 model = boxModelTransforms[i];
-            shader.setMat4("model", model);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        }
-        glBindVertexArray(0);
-
-
+        //glBindVertexArray(quadVAO);
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadEBO);
+        //for (unsigned i = 0; i < 5; ++i) {
+        //    glm::mat4 model = quadModelTransforms[i];
+        //    shader.setMat4("model", model);
+        //    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        //}
+        //glBindVertexArray(0);
+        //glBindVertexArray(boxVAO);
+        //for (unsigned i = 0; i < 5; ++i) {
+        //    glm::mat4 model = boxModelTransforms[i];
+        //    shader.setMat4("model", model);
+        //    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        //}
+        //glBindVertexArray(0);
+        roomModel.Draw(shader);
+        // TEST
+        //cout << "2: " << glGetError() << endl;
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -410,9 +416,9 @@ int main()
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &quadVAO);
-    glDeleteBuffers(1, &quadVBO);
-    glDeleteBuffers(1, &quadEBO);
+    //glDeleteVertexArrays(1, &quadVAO);
+    //glDeleteBuffers(1, &quadVBO);
+    //glDeleteBuffers(1, &quadEBO);
 
     glfwTerminate();
     return 0;
