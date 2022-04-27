@@ -9,9 +9,12 @@ struct Light {
 uniform Light light;
 uniform float farPlane;
 
+uniform sampler2D texture_diffuse1;
+
 in VS_OUT {
 	vec3 worldPos;
 	vec3 fNormal;
+	vec2 fTexCoords;
 } fs_in;
 
 void main() {
@@ -22,6 +25,8 @@ void main() {
 
 	vec3 lightDir = normalize(light.position - fs_in.worldPos);
 	vec3 diff = max(dot(lightDir, fs_in.fNormal), 0.f) * light.diffuse;
-	vec3 objColor = abs(fs_in.fNormal) * 0.8f;
+	// vec3 objColor = abs(fs_in.fNormal) * 0.8f;
+	vec3 objColor = texture(texture_diffuse1, fs_in.fTexCoords).xyz;
+
 	flux = diff * objColor;
 }

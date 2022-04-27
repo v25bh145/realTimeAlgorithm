@@ -7,11 +7,13 @@ uniform mat4 lightShadowMatrices[6];
 in VS_OUT {
 	vec3 worldPos;
 	vec3 fNormal;
+    vec2 fTexCoords;
 } gs_in[];
 
 out VS_OUT {
 	vec3 worldPos;
 	vec3 fNormal;
+    vec2 fTexCoords;
 } gs_out;
 
 void main() {
@@ -22,6 +24,7 @@ void main() {
         {
             gs_out.worldPos = gs_in[i].worldPos;
             gs_out.fNormal = gs_in[i].fNormal;
+            gs_out.fTexCoords = gs_in[i].fTexCoords;
             gl_Position = lightShadowMatrices[face] * gl_in[i].gl_Position;
             EmitVertex();
         }

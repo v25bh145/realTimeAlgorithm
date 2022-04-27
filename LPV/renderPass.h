@@ -1,15 +1,15 @@
 #pragma once
-#include "default.h"
+#include "renderDefault.h"
 class RenderPass {
 protected:
-	vector<unsigned> passTexture;
-	vector<unsigned> passVAO;
-	int indexInPass;
+	unsigned indexInPass;
+	unsigned FBO;
+	Shader* shader;
 
-	Shader shader;
 public:
-	RenderPass(int indexInPass)
-	:indexInPass(indexInPass), passTexture(vector<unsigned>()), passVAO(vector<unsigned>()) {};
+	// if want to use FBO which != 0, can initialize FBO in initTexture()
+	RenderPass(unsigned indexInPass)
+		:indexInPass(indexInPass), FBO(0), shader(nullptr) {};
 	virtual ~RenderPass() {}
 	/* =================
 	* before render loop
@@ -21,9 +21,5 @@ public:
 	/* =================
 	* in render loop
 	*/
-	// default: this->passVAO = passVAO; this->passTexture = passTexture;
-	virtual void initLastPass(vector<unsigned> passVAO, vector<unsigned> passTexture) = 0;
 	virtual void Render() = 0;
-	virtual unsigned getPassReturn(vector<unsigned>& passVAO, vector<unsigned>& passTexture) = 0;
-	virtual void detachPass() = 0;
 };

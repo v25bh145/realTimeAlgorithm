@@ -1,6 +1,6 @@
 #pragma once
 
-#include "default.h"
+#include "renderDefault.h"
 #include "LPVPass.h"
 
 class RenderAlgorithm {
@@ -13,7 +13,7 @@ public:
 		initVAO = -1;
 		GetShadowSamplePass* getShadowSamplePass = new GetShadowSamplePass(0);
 		//Output2DPass* output2DPass = new Output2DPass(1);
-		OutputCubeMapPass* outputCubeMapPass = new OutputCubeMapPass(1);
+		OutputCubeMapPass* outputCubeMapPass = new OutputCubeMapPass(1, "fluxMap");
 		rps.push_back(getShadowSamplePass);
 		//rps.push_back(output2DPass);
 		rps.push_back(outputCubeMapPass);

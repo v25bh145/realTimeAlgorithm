@@ -33,9 +33,6 @@
     <ClInclude Include="..\include\stb_image_write.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="default.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="renderAlgorithm.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -48,18 +45,18 @@
     <ClInclude Include="texture.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="resourceManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="renderDefault.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="default.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="renderAlgorithm.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="renderPass.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\src\camera.cpp">
@@ -84,6 +81,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="texture.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="resourceManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="renderDefault.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

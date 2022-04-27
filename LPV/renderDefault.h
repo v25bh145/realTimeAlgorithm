@@ -14,12 +14,10 @@
 #include "../include/model.h"
 #include "../include/stb_image.h"
 #include "texture.h"
+#include "resourceManager.h"
 
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 600
-
-//typedef void (*RenderFunc)();
-//typedef void (*SettingsFunc)();
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
@@ -27,4 +25,3 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void updateDeltaTime(float currentFrame);
 void processInput(GLFWwindow* window);
 GLFWwindow* initWindow();
-Camera* getCamera();

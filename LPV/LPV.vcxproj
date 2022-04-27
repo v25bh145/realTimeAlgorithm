@@ -148,10 +148,11 @@
     <ClInclude Include="..\include\shader.h" />
     <ClInclude Include="..\include\stb_image.h" />
     <ClInclude Include="..\include\stb_image_write.h" />
-    <ClInclude Include="default.h" />
     <ClInclude Include="LPVPass.h" />
     <ClInclude Include="renderAlgorithm.h" />
+    <ClInclude Include="renderDefault.h" />
     <ClInclude Include="renderPass.h" />
+    <ClInclude Include="resourceManager.h" />
     <ClInclude Include="texture.h" />
   </ItemGroup>
   <ItemGroup>
@@ -161,11 +162,11 @@
     <ClCompile Include="..\src\model.cpp" />
     <ClCompile Include="..\src\shader.cpp" />
     <ClCompile Include="..\src\stb_image.cpp" />
-    <ClCompile Include="default.cpp" />
     <ClCompile Include="LPVPass.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="renderAlgorithm.cpp" />
-    <ClCompile Include="renderPass.cpp" />
+    <ClCompile Include="renderDefault.cpp" />
+    <ClCompile Include="resourceManager.cpp" />
     <ClCompile Include="texture.cpp" />
   </ItemGroup>
   <ItemGroup>
