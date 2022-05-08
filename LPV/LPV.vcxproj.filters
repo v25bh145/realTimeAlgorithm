@@ -51,6 +51,9 @@
     <ClInclude Include="renderDefault.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="randomGenerator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -89,6 +92,9 @@
     <ClCompile Include="renderDefault.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="randomGenerator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="getShadowSample.vert">
@@ -110,6 +116,12 @@
       <Filter>资源文件</Filter>
     </None>
     <None Include="outputCubeMap.frag">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="lightInjection.vert">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="lightInjection.frag">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>

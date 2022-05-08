@@ -28,6 +28,9 @@ float ResourceManager::getFarPlane()
 	return this->farPlane;
 }
 void ResourceManager::setModel(string modelName, Model* model, glm::mat4 modelTransform) {
+	auto res = this->modelHashMap.find(modelName);
+	if (res != this->modelHashMap.end())
+		this->modelHashMap.erase(modelName);
 	this->modelHashMap.insert({ modelName, {model, modelTransform} });
 }
 std::pair<Model*, glm::mat4> ResourceManager::deleteModel(string modelName) {
@@ -54,6 +57,10 @@ std::pair<Model*, glm::mat4> ResourceManager::getModel(string modelName) {
 }
 
 void ResourceManager::setTexture(string textureName, unsigned texture) {
+	auto res = this->textureHashMap.find(textureName);
+	if (res != this->textureHashMap.end())
+		this->textureHashMap.erase(textureName);
+
 	this->textureHashMap.insert({ textureName, texture });
 }
 unsigned ResourceManager::deleteTexture(string textureName) {
@@ -81,6 +88,9 @@ unsigned ResourceManager::getTexture(string textureName) {
 
 void ResourceManager::setVAO(string VAOName, unsigned VAO, glm::mat4 VAOTransform)
 {
+	auto res = this->VAOHashMap.find(VAOName);
+	if (res != this->VAOHashMap.end())
+		this->VAOHashMap.erase(VAOName);
 	this->VAOHashMap.insert({ VAOName, {VAO, VAOTransform} });
 }
 

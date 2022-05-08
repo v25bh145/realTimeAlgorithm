@@ -15,6 +15,7 @@
 #include "../include/stb_image.h"
 #include "texture.h"
 #include "resourceManager.h"
+#include "randomGenerator.h"
 
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 600

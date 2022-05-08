@@ -13,5 +13,7 @@ using namespace std;
 unsigned int loadTexture(char const* path);
 unsigned int loadCubemap(vector<string> paths, int& imageSize, int& nrComponents, vector<unsigned char*>& datas, bool getData = true);
 void createTextureCubeMapNull(unsigned& texture, unsigned width, unsigned height, unsigned nrComponent);
+void createTexture2DNull(unsigned& texture, unsigned width, unsigned height, unsigned internalFormat, unsigned format, unsigned type);
+void createTexture3DNull(unsigned& texture, unsigned width, unsigned height, unsigned depth, unsigned internalFormat, unsigned format, unsigned type);
 //void createTexture2DNull(unsigned& texture, unsigned width, unsigned height, unsigned nrComponent);
 //void createTexture1DNull(unsigned& texture, unsigned width, unsigned nrComponent);

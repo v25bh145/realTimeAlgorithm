@@ -149,6 +149,7 @@
     <ClInclude Include="..\include\stb_image.h" />
     <ClInclude Include="..\include\stb_image_write.h" />
     <ClInclude Include="LPVPass.h" />
+    <ClInclude Include="randomGenerator.h" />
     <ClInclude Include="renderAlgorithm.h" />
     <ClInclude Include="renderDefault.h" />
     <ClInclude Include="renderPass.h" />
@@ -164,6 +165,7 @@
     <ClCompile Include="..\src\stb_image.cpp" />
     <ClCompile Include="LPVPass.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="randomGenerator.cpp" />
     <ClCompile Include="renderAlgorithm.cpp" />
     <ClCompile Include="renderDefault.cpp" />
     <ClCompile Include="resourceManager.cpp" />
@@ -173,6 +175,8 @@
     <None Include="getShadowSample.frag" />
     <None Include="getShadowSample.geom" />
     <None Include="getShadowSample.vert" />
+    <None Include="lightInjection.frag" />
+    <None Include="lightInjection.vert" />
     <None Include="output2D.frag" />
     <None Include="output2D.vert" />
     <None Include="outputCubeMap.frag" />
