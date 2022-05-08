@@ -141,18 +141,19 @@ void GetShadowSamplePass::Render()
 float* LightInjectionPass::getSamplesRandom(unsigned samplesN)
 {
     // TODO: 对球面均匀采样
-    float* sampleRes = new float[samplesN * 3];
+    float* sampleRes = new float[samplesN * 4];
     RandomGenerator randomGenerator;
     vector<vec3> samples3D = randomGenerator.uniform0To1By3D(samplesN);
     for (int i = 0; i < samples3D.size(); ++i) {
-        if (i * 3 + 2 >= int(samplesN) * 3) {
+        if (i * 4 + 3 >= int(samplesN) * 4) {
             cout << "ERROR: buffer overflow in getSamplesRandom(), samples array size="<< samples3D.size() << endl;
             return nullptr;
         }
         vec3 sample = samples3D[i];
-        sampleRes[i * 3 + 0] = 1.f - 2.f * sample.x;
-        sampleRes[i * 3 + 1] = 1.f - 2.f * sample.y;
-        sampleRes[i * 3 + 2] = 1.f - 2.f * sample.z;
+        sampleRes[i * 4 + 0] = 1.f - 2.f * sample.x;
+        sampleRes[i * 4 + 1] = 1.f - 2.f * sample.y;
+        sampleRes[i * 4 + 2] = 1.f - 2.f * sample.z;
+        sampleRes[i * 4 + 3] = float(i);
     }
     return sampleRes;
 }
@@ -172,8 +173,8 @@ void LightInjectionPass::initTexture()
     glGenFramebuffers(1, &this->FBO);
     glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
     // TODO: 以体面的方式划分格子，在第一个pass中/CPU找出每个轴的最小和最大值
-    const vec3 gridMaxBox = { 50.f, 50.f, 50.f };
-    const vec3 gridMinBox = { -50.f, -50.f, -50.f };
+    const vec3 gridMaxBox = { 20.f, 20.f, 20.f };
+    const vec3 gridMinBox = { -20.f, -20.f, -20.f };
     const vec3 fGridSize = (gridMaxBox - gridMinBox) / float(this->uGridTextureSize);
     this->shader->setVec3("gridSize", fGridSize);
     this->shader->setVec3("gridMinBox", gridMinBox);
@@ -231,7 +232,7 @@ void LightInjectionPass::initTexture()
     GLuint testTexture;
     glGenTextures(1, &testTexture);
     glBindTexture(GL_TEXTURE_1D, testTexture);
-    glTexStorage1D(GL_TEXTURE_1D, 1, GL_RGBA32F, this->uGridTextureSize);
+    glTexStorage1D(GL_TEXTURE_1D, 1, GL_RGBA32F, this->samplesN);
     glBindTexture(GL_TEXTURE_1D, 0);
     glBindImageTexture(6, testTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
     this->shader->setInt("testTexture", 6);
@@ -259,7 +260,7 @@ void LightInjectionPass::Render()
     this->shader->use();
     // clear buffer [!important]
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //glDisable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
     // set viewport
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     // 清空image缓存
@@ -283,6 +284,8 @@ void LightInjectionPass::Render()
 
     // 传递的数据VAO
     // TODO: DELETE VAO
+    // TODO: 只在有值的地方采样
+    // 可选方案: 在VAO中采样，直接采样几个顶点，如果被遮蔽必定有其他的顶点对上
     float* vertices = this->getSamplesRandom(this->samplesN);
     //vertices[0] = -0.5898f;
     //vertices[1] = -0.0318f;
@@ -291,17 +294,21 @@ void LightInjectionPass::Render()
         cout << "ERROR: failed to get samples in getSamplesLHS" << endl;
     }
     for (int i = 0; i < this->samplesN; ++i) {
-        cout << "sample: x, y, z = " << vertices[i * 3 + 0] << ", " << vertices[i * 3 + 1] << ", " << vertices[i * 3 + 2] << endl;
+        cout << "sample: x, y, z, i = " << vertices[i * 4 + 0] << ", " << vertices[i * 4 + 1] << ", " << vertices[i * 4 + 2] << ", " << vertices[i * 4 + 3] << endl;
     }
     unsigned sampleVAO, sampleVBO;
     glGenVertexArrays(1, &sampleVAO);
     glGenBuffers(1, &sampleVBO);
     glBindVertexArray(sampleVAO);
     glBindBuffer(GL_ARRAY_BUFFER, sampleVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * this->samplesN, vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * this->samplesN, vertices, GL_STATIC_DRAW);
     cout << "TEST VBO " << glGetError() << endl;
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // sample tex
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    // sample index
+    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
     cout << "TEST VAO " << glGetError() << endl;
     glBindVertexArray(0);
     ResourceManager::get()->setVAO("sampleVAO", sampleVAO, mat4(1.f));
@@ -317,32 +324,30 @@ void LightInjectionPass::Render()
     glBindTexture(GL_TEXTURE_3D, ResourceManager::get()->getTexture("girdTextureR0"));
     unsigned* testData = new unsigned[this->uGridTextureSize * this->uGridTextureSize * this->uGridTextureSize];
     glGetTexImage(GL_TEXTURE_3D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, testData);
+
     cout << "TEST DATA girdTextureR0 " << glGetError() << endl;
-    cout << "                                          ";
-    bool flag = false;
     for (int i = 0; i < this->uGridTextureSize * this->uGridTextureSize * this->uGridTextureSize; ++i) {
         cout << testData[i] << " ";
-        //if (testData[i] != 282) flag = true;
     }
     cout << endl;
     
     // get test data from testTexture
     glBindTexture(GL_TEXTURE_1D, ResourceManager::get()->getTexture("testTexture"));
-    float* testData2 = new float[this->uGridTextureSize * 4];
+    float* testData2 = new float[this->samplesN * 4];
     glGetTexImage(GL_TEXTURE_1D, 0, GL_RGBA, GL_FLOAT, testData2);
+
     cout << "TEST DATA testTexture " << glGetError() << endl;
-    //cout << "                                   ";
-    for (int i = 0; i < this->uGridTextureSize * 4; ++i) {
-        cout << testData2[i] << " ";
-        if (testData2[i] < 0.99f && testData2[i] > 0.1f) flag = true;
+    for (int i = 0; i < this->samplesN; ++i) {
+        cout << testData2[i * 4 + 0] << ", ";
+        cout << testData2[i * 4 + 1] << ", ";
+        cout << testData2[i * 4 + 2] << ", ";
+        cout << testData2[i * 4 + 3] <<endl;
     }
     cout << endl;
-    if (flag) system("pause");
 
     glBindVertexArray(0);
     // clear FBO [!important]
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 }
 
 

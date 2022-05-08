@@ -17,7 +17,7 @@ void RenderAlgorithm::prepareRendering()
 
 void RenderAlgorithm::renderingOnce()
 {
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClearColor(0.f, 0.f, 0.f, 1.0f);
 	for (int index = 0; index < rps.size(); ++index) {
 		RenderPass* pass = rps[index];
 		pass->Render();

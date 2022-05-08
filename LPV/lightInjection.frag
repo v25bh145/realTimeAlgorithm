@@ -19,6 +19,7 @@ in VS_OUT {
 	vec3 worldPos;
 	vec3 flux;
 	vec3 uv;
+	flat int sampleIndex;
 } fs_in;
 
 float P(float x, int l, int m) {
@@ -96,7 +97,8 @@ uniform vec3 gridSize;
 uniform vec3 gridMinBox;
 
 void main() {
-    
+    if(fs_in.worldPos == vec3(0.f, 0.f, 0.f)) 
+        discard;
     // get 3D index of VPL
     vec3 worldPosToMinBox = fs_in.worldPos - gridMinBox;
     vec3 fGridIndex = {floor(worldPosToMinBox.x / gridSize.x), floor(worldPosToMinBox.y / gridSize.y), floor(worldPosToMinBox.z / gridSize.z)};
@@ -129,5 +131,5 @@ void main() {
     imageAtomicAdd(girdTextureB1, iGridIndex, vec2ToAtom(vec2(gird_SH[2].b, gird_SH[3].b)));
     
     //imageStore(testTexture, 0, vec4(gird_SH[0].r, gird_SH[1].r, gird_SH[2].r, gird_SH[3].r));
-    //imageStore(testTexture, 0, vec4(gird_SH[0].r, gird_SH[1].r, gird_SH[2].r, gird_SH[3].r));
+    imageStore(testTexture, fs_in.sampleIndex, vec4(fGridIndex, 1.f));
 }
