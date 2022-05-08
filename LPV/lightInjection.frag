@@ -4,18 +4,21 @@
 // 4通道，每个通道8位，将球谐系数扩大了10000倍以整数形式保存
 
 // girdTextureR: c1 ~ c4
-layout (r32ui, binding = 0) uniform uimage3D girdTextureR;
+layout (r32ui, binding = 0) uniform uimage3D girdTextureR0;
+layout (r32ui, binding = 1) uniform uimage3D girdTextureR1;
 // girdTextureG: c1 ~ c4
-layout (r32ui, binding = 1) uniform uimage3D girdTextureG;
+layout (r32ui, binding = 2) uniform uimage3D girdTextureG0;
+layout (r32ui, binding = 3) uniform uimage3D girdTextureG1;
 // girdTextureB: c1 ~ c4
-layout (r32ui, binding = 2) uniform uimage3D girdTextureB;
+layout (r32ui, binding = 4) uniform uimage3D girdTextureB0;
+layout (r32ui, binding = 5) uniform uimage3D girdTextureB1;
 
-layout (rgba32f, binding = 3) uniform image1D testTexture;
+layout (rgba32f, binding = 6) uniform image1D testTexture;
 
 in VS_OUT {
 	vec3 worldPos;
 	vec3 flux;
-    vec3 uv;
+	vec3 uv;
 } fs_in;
 
 float P(float x, int l, int m) {
@@ -69,25 +72,24 @@ float SH(int l, int m, float theta, float phi) {
     else if (m > 0) return sqrt2 * K(l, m) * cos(m * phi) * P(cos(theta), l, m);
     else return sqrt2 * K(l, m) * sin(-m * phi) * P(cos(theta), l, -m);
 }
-
-const float compressFactor = 100.f;
-uint compressFloatToUint8(float f) {
+// [-32767, +32767]
+const float compressFactor = 5000.f;
+// accuracy = 1.f / compressFactor
+uint compressFloatToUint16(float f) {
     uint res;
     if(f > 0.f) {
         res = uint(abs(f) * compressFactor);
     } else {
-        res = (1 << 7) + uint(abs(f) * compressFactor);
+        res = (1 << 15) + uint(abs(f) * compressFactor);
     }
     return res;
 }
-uint vec4ToAtom(vec4 fColor)
+uint vec2ToAtom(vec2 fColor)
 {
-    uvec4 uColor;
-    uColor.r = compressFloatToUint8(fColor.r);
-    uColor.g = compressFloatToUint8(fColor.g);
-    uColor.b = compressFloatToUint8(fColor.b);
-    uColor.a = compressFloatToUint8(fColor.a);
-    return uColor.r | (uColor.g << 8) | (uColor.b << 16) | (uColor.a << 24);
+    uvec2 uColor;
+    uColor.r = compressFloatToUint16(fColor.r);
+    uColor.g = compressFloatToUint16(fColor.g);
+    return uColor.r | (uColor.g << 16);
 }
 
 uniform vec3 gridSize;
@@ -119,9 +121,13 @@ void main() {
     for(int i = 0; i < 2 * 2; i++) {
         gird_SH[i] = fs_in.flux * VPL_SH[i];
     }
-    imageAtomicAdd(girdTextureR, iGridIndex, vec4ToAtom(vec4(gird_SH[0].r, gird_SH[1].r, gird_SH[2].r, gird_SH[3].r)));
-    imageAtomicAdd(girdTextureG, iGridIndex, vec4ToAtom(vec4(gird_SH[0].g, gird_SH[1].g, gird_SH[2].g, gird_SH[3].g)));
-    imageAtomicAdd(girdTextureB, iGridIndex, vec4ToAtom(vec4(gird_SH[0].b, gird_SH[1].b, gird_SH[2].b, gird_SH[3].b)));
-
-    imageStore(testTexture, 0, vec4(gird_SH[0].r, gird_SH[1].r, gird_SH[2].r, gird_SH[3].r));
+    imageAtomicAdd(girdTextureR0, iGridIndex, vec2ToAtom(vec2(gird_SH[0].r, gird_SH[1].r)));
+    imageAtomicAdd(girdTextureR1, iGridIndex, vec2ToAtom(vec2(gird_SH[2].r, gird_SH[3].r)));
+    imageAtomicAdd(girdTextureG0, iGridIndex, vec2ToAtom(vec2(gird_SH[0].g, gird_SH[1].g)));
+    imageAtomicAdd(girdTextureG1, iGridIndex, vec2ToAtom(vec2(gird_SH[2].g, gird_SH[3].g)));
+    imageAtomicAdd(girdTextureB0, iGridIndex, vec2ToAtom(vec2(gird_SH[0].b, gird_SH[1].b)));
+    imageAtomicAdd(girdTextureB1, iGridIndex, vec2ToAtom(vec2(gird_SH[2].b, gird_SH[3].b)));
+    
+    //imageStore(testTexture, 0, vec4(gird_SH[0].r, gird_SH[1].r, gird_SH[2].r, gird_SH[3].r));
+    //imageStore(testTexture, 0, vec4(gird_SH[0].r, gird_SH[1].r, gird_SH[2].r, gird_SH[3].r));
 }

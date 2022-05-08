@@ -37,6 +37,8 @@
 // clear VAO
 // clear FBO [!important]
 
+// TODO: GL_MAX_IMAGE_UNITS
+
 void GetShadowSamplePass::initGlobalSettings()
 {
     // light information
@@ -176,36 +178,54 @@ void LightInjectionPass::initTexture()
     this->shader->setVec3("gridSize", fGridSize);
     this->shader->setVec3("gridMinBox", gridMinBox);
 
-    unsigned gridTextureR, gridTextureG, gridTextureB;
-    glGenTextures(1, &gridTextureR);
-    glBindTexture(GL_TEXTURE_3D, gridTextureR);
+    unsigned gridTextureR0, gridTextureG0, gridTextureB0, gridTextureR1, gridTextureG1, gridTextureB1;
+    glGenTextures(1, &gridTextureR0);
+    glBindTexture(GL_TEXTURE_3D, gridTextureR0);
     glTexStorage3D(GL_TEXTURE_3D, 1, GL_R32UI, this->uGridTextureSize, this->uGridTextureSize, this->uGridTextureSize);
     //glTexImage3D(GL_TEXTURE_3D, 0, GL_R32UI, this->uGridTextureSize, this->uGridTextureSize, this->uGridTextureSize, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
     cout << "glTexImage3D " << glGetError() << endl;
+    glGenTextures(1, &gridTextureR1);
+    glBindTexture(GL_TEXTURE_3D, gridTextureR1);
+    glTexStorage3D(GL_TEXTURE_3D, 1, GL_R32UI, this->uGridTextureSize, this->uGridTextureSize, this->uGridTextureSize);
 
-    glGenTextures(1, &gridTextureG);
-    glBindTexture(GL_TEXTURE_3D, gridTextureG);
-    //glTexStorage3D(GL_TEXTURE_3D, 1, GL_R32UI, this->uGridTextureSize, this->uGridTextureSize, this->uGridTextureSize);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_R32UI, this->uGridTextureSize, this->uGridTextureSize, this->uGridTextureSize, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
+    glGenTextures(1, &gridTextureG0);
+    glBindTexture(GL_TEXTURE_3D, gridTextureG0);
+    glTexStorage3D(GL_TEXTURE_3D, 1, GL_R32UI, this->uGridTextureSize, this->uGridTextureSize, this->uGridTextureSize);
+    glGenTextures(1, &gridTextureG1);
+    glBindTexture(GL_TEXTURE_3D, gridTextureG1);
+    glTexStorage3D(GL_TEXTURE_3D, 1, GL_R32UI, this->uGridTextureSize, this->uGridTextureSize, this->uGridTextureSize);
 
-    glGenTextures(1, &gridTextureB);
-    glBindTexture(GL_TEXTURE_3D, gridTextureB);
-    //glTexStorage3D(GL_TEXTURE_3D, 1, GL_R32UI, this->uGridTextureSize, this->uGridTextureSize, this->uGridTextureSize);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_R32UI, this->uGridTextureSize, this->uGridTextureSize, this->uGridTextureSize, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
+    glGenTextures(1, &gridTextureB0);
+    glBindTexture(GL_TEXTURE_3D, gridTextureB0);
+    glTexStorage3D(GL_TEXTURE_3D, 1, GL_R32UI, this->uGridTextureSize, this->uGridTextureSize, this->uGridTextureSize);
+    glGenTextures(1, &gridTextureB1);
+    glBindTexture(GL_TEXTURE_3D, gridTextureB1);
+    glTexStorage3D(GL_TEXTURE_3D, 1, GL_R32UI, this->uGridTextureSize, this->uGridTextureSize, this->uGridTextureSize);
+
+
     glBindTexture(GL_TEXTURE_3D, 0);
 
-    glBindImageTexture(0, gridTextureR, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+    glBindImageTexture(0, gridTextureR0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+    glBindImageTexture(1, gridTextureR1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+    glBindImageTexture(2, gridTextureG0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+    glBindImageTexture(3, gridTextureG1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+    glBindImageTexture(4, gridTextureB0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+    glBindImageTexture(5, gridTextureB1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
     cout << "glBindImageTexture " << glGetError() << endl;
-    glBindImageTexture(1, gridTextureG, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
-    glBindImageTexture(2, gridTextureB, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
 
-    ResourceManager::get()->setTexture("girdTextureR", gridTextureR);
-    ResourceManager::get()->setTexture("girdTextureG", gridTextureG);
-    ResourceManager::get()->setTexture("girdTextureB", gridTextureB);
+    ResourceManager::get()->setTexture("girdTextureR0", gridTextureR0);
+    ResourceManager::get()->setTexture("girdTextureR1", gridTextureR1);
+    ResourceManager::get()->setTexture("girdTextureG0", gridTextureG0);
+    ResourceManager::get()->setTexture("girdTextureG1", gridTextureG1);
+    ResourceManager::get()->setTexture("girdTextureB0", gridTextureB0);
+    ResourceManager::get()->setTexture("girdTextureB1", gridTextureB1);
 
-    this->shader->setInt("girdTextureR", 0);
-    this->shader->setInt("girdTextureG", 1);
-    this->shader->setInt("girdTextureB", 2);
+    this->shader->setInt("girdTextureR0", 0);
+    this->shader->setInt("girdTextureR1", 1);
+    this->shader->setInt("girdTextureG0", 2);
+    this->shader->setInt("girdTextureG1", 3);
+    this->shader->setInt("girdTextureB0", 4);
+    this->shader->setInt("girdTextureB1", 5);
 
     // test texture
     GLuint testTexture;
@@ -213,19 +233,13 @@ void LightInjectionPass::initTexture()
     glBindTexture(GL_TEXTURE_1D, testTexture);
     glTexStorage1D(GL_TEXTURE_1D, 1, GL_RGBA32F, this->uGridTextureSize);
     glBindTexture(GL_TEXTURE_1D, 0);
-    glBindImageTexture(3, testTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-    this->shader->setInt("testTexture", 3);
+    glBindImageTexture(6, testTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+    this->shader->setInt("testTexture", 6);
     ResourceManager::get()->setTexture("testTexture", testTexture);
 
     unsigned depthMap;
     createTexture2DNull(depthMap, SHADOW_WIDTH, SHADOW_HEIGHT, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthMap, 0);
-
-    //unsigned colorBufferMap;
-    //createTexture2DNull(colorBufferMap, SHADOW_WIDTH, SHADOW_HEIGHT, GL_RGB16F, GL_RGB, GL_FLOAT);
-    //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorBufferMap, 0);
-    //GLenum bufs[1] = { GL_COLOR_ATTACHMENT0 };
-    //glDrawBuffers(1, bufs);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!: status=" << glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
@@ -249,33 +263,30 @@ void LightInjectionPass::Render()
     // set viewport
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     // 清空image缓存
-    glClearTexImage(ResourceManager::get()->getTexture("girdTextureR"), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
-    glClearTexImage(ResourceManager::get()->getTexture("girdTextureG"), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
-    glClearTexImage(ResourceManager::get()->getTexture("girdTextureB"), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
-    //cout << "glClearTexImage " << glGetError() << endl;
+    glClearTexImage(ResourceManager::get()->getTexture("girdTextureR0"), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
+    glClearTexImage(ResourceManager::get()->getTexture("girdTextureR1"), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
+    glClearTexImage(ResourceManager::get()->getTexture("girdTextureG0"), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
+    glClearTexImage(ResourceManager::get()->getTexture("girdTextureG1"), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
+    glClearTexImage(ResourceManager::get()->getTexture("girdTextureB0"), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
+    glClearTexImage(ResourceManager::get()->getTexture("girdTextureB1"), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
 
     // 绑定输入的纹理
     unsigned worldPosMap = ResourceManager::get()->getTexture("worldPosMap");
     this->shader->setInt("worldPosMap", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, worldPosMap);
-    //cout << "glBindTexture worldPosMap " << glGetError() << endl;
 
     unsigned fluxMap = ResourceManager::get()->getTexture("fluxMap");
     this->shader->setInt("fluxMap", 1);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_CUBE_MAP, fluxMap);
-    //cout << "glBindTexture fluxMap " << glGetError() << endl;
 
     // 传递的数据VAO
     // TODO: DELETE VAO
     float* vertices = this->getSamplesRandom(this->samplesN);
-    //vertices[0] = -0.7592f;
-    //vertices[1] = -0.389f;
-    //vertices[2] = -0.6848f;
-    vertices[0] = -0.5898f;
-    vertices[1] = -0.0318f;
-    vertices[2] = -0.6212f;
+    //vertices[0] = -0.5898f;
+    //vertices[1] = -0.0318f;
+    //vertices[2] = -0.6212f;
     if (vertices == nullptr) {
         cout << "ERROR: failed to get samples in getSamplesLHS" << endl;
     }
@@ -288,25 +299,25 @@ void LightInjectionPass::Render()
     glBindVertexArray(sampleVAO);
     glBindBuffer(GL_ARRAY_BUFFER, sampleVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * this->samplesN, vertices, GL_STATIC_DRAW);
-    //cout << "TEST VBO " << glGetError() << endl;
+    cout << "TEST VBO " << glGetError() << endl;
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    //cout << "TEST VAO " << glGetError() << endl;
+    cout << "TEST VAO " << glGetError() << endl;
     glBindVertexArray(0);
     ResourceManager::get()->setVAO("sampleVAO", sampleVAO, mat4(1.f));
 
     pair<unsigned, mat4> VAOPair = ResourceManager::get()->getVAO("sampleVAO");
     glBindVertexArray(VAOPair.first);
     glDrawArrays(GL_POINTS, 0, this->samplesN);
-    //cout << "glDrawArrays " << glGetError() << endl;
+    cout << "glDrawArrays " << glGetError() << endl;
 
     glFinish();
 
-    // get test data from girdTextureR
-    glBindTexture(GL_TEXTURE_3D, ResourceManager::get()->getTexture("girdTextureR"));
+    // get test data from girdTextureR0
+    glBindTexture(GL_TEXTURE_3D, ResourceManager::get()->getTexture("girdTextureR0"));
     unsigned* testData = new unsigned[this->uGridTextureSize * this->uGridTextureSize * this->uGridTextureSize];
     glGetTexImage(GL_TEXTURE_3D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, testData);
-    cout << "TEST DATA girdTextureR " << glGetError() << endl;
+    cout << "TEST DATA girdTextureR0 " << glGetError() << endl;
     cout << "                                          ";
     bool flag = false;
     for (int i = 0; i < this->uGridTextureSize * this->uGridTextureSize * this->uGridTextureSize; ++i) {
@@ -314,7 +325,7 @@ void LightInjectionPass::Render()
         //if (testData[i] != 282) flag = true;
     }
     cout << endl;
-
+    
     // get test data from testTexture
     glBindTexture(GL_TEXTURE_1D, ResourceManager::get()->getTexture("testTexture"));
     float* testData2 = new float[this->uGridTextureSize * 4];

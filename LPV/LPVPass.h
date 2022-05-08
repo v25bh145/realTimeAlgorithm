@@ -50,8 +50,8 @@ public:
 	LightInjectionPass(int indexInPass) : RenderPass(indexInPass) {
 		//this->samplesN = 50;
 		//this->uGridTextureSize = 50;
-		this->samplesN = 1;
-		this->uGridTextureSize = 1;
+		this->samplesN = 50;
+		this->uGridTextureSize = 50;
 	};
 	LightInjectionPass(int indexInPass, int samplesN, int uGridTextureSize) : RenderPass(indexInPass) {
 		this->samplesN = samplesN;
