@@ -58,6 +58,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
         vector.y = mesh->mVertices[i].y;
         vector.z = mesh->mVertices[i].z;
         vertex.Position = vector;
+        this->boudingVolume = this->maxBoundingVolume(vertex.Position);
         // normals
         if (mesh->HasNormals())
         {
@@ -155,6 +156,16 @@ vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type,
         }
     }
     return textures;
+}
+pair<glm::vec3, glm::vec3> Model::maxBoundingVolume(glm::vec3 point)
+{
+    float minX = std::min(this->boudingVolume.first.x, point.x);
+    float minY = std::min(this->boudingVolume.first.y, point.y);
+    float minZ = std::min(this->boudingVolume.first.z, point.z);
+    float maxX = std::max(this->boudingVolume.second.x, point.x);
+    float maxY = std::max(this->boudingVolume.second.y, point.y);
+    float maxZ = std::max(this->boudingVolume.second.z, point.z);
+    return { {minX, minY, minZ}, {maxX, maxY, maxZ} };
 }
 unsigned int TextureFromFile(const char* path, const string& directory, bool gamma)
 {

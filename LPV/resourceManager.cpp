@@ -1,4 +1,6 @@
 #include "resourceManager.h"
+using namespace glm;
+using namespace std;
 
 Camera* ResourceManager::getCamera()
 {
@@ -120,34 +122,34 @@ std::pair<unsigned, glm::mat4> ResourceManager::getVAO(string VAOName)
 	}
 }
 
-void ResourceManager::setGlobalFloat(string varName, float var)
+void ResourceManager::setGlobalVec3(string varName, vec3 var)
 {
-	auto res = this->globalFloatMap.find(varName);
-	if (res != this->globalFloatMap.end())
-		this->globalFloatMap.erase(varName);
-	this->globalFloatMap.insert({ varName, var });
+	auto res = this->globalVec3Map.find(varName);
+	if (res != this->globalVec3Map.end())
+		this->globalVec3Map.erase(varName);
+	this->globalVec3Map.insert({ varName, var });
 }
 
-float ResourceManager::deleteGlobalFloat(string varName)
+vec3 ResourceManager::deleteGlobalVec3(string varName)
 {
-	auto res = this->globalFloatMap.find(varName);
-	if (res == this->globalFloatMap.end()) {
-		std::cout << "WARNING: can't find anything in deleteGlobalFloat() while name = " << varName << std::endl;
-		return NULL;
+	auto res = this->globalVec3Map.find(varName);
+	if (res == this->globalVec3Map.end()) {
+		std::cout << "WARNING: can't find anything in deleteGlobalVec3() while name = " << varName << std::endl;
+		return vec3(0.f);
 	}
 	else {
-		float resVar = res->second;
-		this->globalFloatMap.erase(varName);
+		vec3 resVar = res->second;
+		this->globalVec3Map.erase(varName);
 		return resVar;
 	}
 }
 
-float ResourceManager::getGlobalFloat(string varName)
+vec3 ResourceManager::getGlobalVec3(string varName)
 {
-	auto res = this->globalFloatMap.find(varName);
-	if (res == this->globalFloatMap.end()) {
-		std::cout << "WARNING: can't find anything in getGlobalFloat() while name = " << varName << std::endl;
-		return NULL;
+	auto res = this->globalVec3Map.find(varName);
+	if (res == this->globalVec3Map.end()) {
+		std::cout << "WARNING: can't find anything in getGlobalVec3() while name = " << varName << std::endl;
+		return vec3(0.f);
 	}
 	else {
 		return res->second;

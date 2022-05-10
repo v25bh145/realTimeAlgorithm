@@ -21,10 +21,10 @@ private:
 	// 外部导入模型
 	std::unordered_map<std::string, std::pair<Model*, glm::mat4>> modelHashMap;
 	// 内建模型
-	std::unordered_map<string, std::pair<unsigned, glm::mat4>> VAOHashMap;
-	std::unordered_map<string, unsigned> textureHashMap;
+	std::unordered_map<std::string, std::pair<unsigned, glm::mat4>> VAOHashMap;
+	std::unordered_map<std::string, unsigned> textureHashMap;
 	// 全局变量
-	std::unordered_map<string, float> globalFloatMap;
+	std::unordered_map<std::string, glm::vec3> globalVec3Map;
 	Camera* camera;
 	//  point light only
 	glm::vec3 lightPos;
@@ -56,19 +56,19 @@ public:
 	float getFarPlane();
 
 
-	void setModel(string modelName, Model* model, glm::mat4 modelTransform);
-	std::pair<Model*, glm::mat4> deleteModel(string modelName);
-	std::pair<Model*, glm::mat4> getModel(string modelName);
+	void setModel(std::string modelName, Model* model, glm::mat4 modelTransform);
+	std::pair<Model*, glm::mat4> deleteModel(std::string modelName);
+	std::pair<Model*, glm::mat4> getModel(std::string modelName);
 
-	void setTexture(string textureName, unsigned texture);
-	unsigned deleteTexture(string textureName);
-	unsigned getTexture(string textureName);
+	void setTexture(std::string textureName, unsigned texture);
+	unsigned deleteTexture(std::string textureName);
+	unsigned getTexture(std::string textureName);
 
-	void setVAO(string VAOName, unsigned VAO, glm::mat4 VAOTransform);
-	std::pair<unsigned, glm::mat4> deleteVAO(string VAOName);
-	std::pair<unsigned, glm::mat4> getVAO(string VAOName);
+	void setVAO(std::string VAOName, unsigned VAO, glm::mat4 VAOTransform);
+	std::pair<unsigned, glm::mat4> deleteVAO(std::string VAOName);
+	std::pair<unsigned, glm::mat4> getVAO(std::string VAOName);
 
-	void setGlobalFloat(string varName, float var);
-	float deleteGlobalFloat(string varName);
-	float getGlobalFloat(string varName);
+	void setGlobalVec3(std::string varName, glm::vec3 var);
+	glm::vec3 deleteGlobalVec3(std::string varName);
+	glm::vec3 getGlobalVec3(std::string varName);
 };

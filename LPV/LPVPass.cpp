@@ -37,7 +37,7 @@
 // clear VAO
 // clear FBO [!important]
 
-// TODO: GL_MAX_IMAGE_UNITS
+// TODO: GL_MAX_IMAGE_UNITS judge
 
 void GetShadowSamplePass::initGlobalSettings()
 {
@@ -114,8 +114,9 @@ void GetShadowSamplePass::initScene()
     // scene geom
     //Model* nanosuit = new Model("../models/Room/Room #1.obj");
     Model* nanosuit = new Model("../models/nanosuit/nanosuit.obj");
-    vec4 minMax = nanosuit->getBoundingBoxOfModel();
     pResourceManager->setModel("renderModel", nanosuit, mat4(1.f));
+    pResourceManager->setGlobalVec3("boundingVolumeMin", nanosuit->boudingVolume.first);
+    pResourceManager->setGlobalVec3("boundingVolumeMax", nanosuit->boudingVolume.second);
 }
 
 void GetShadowSamplePass::Render()
@@ -196,9 +197,12 @@ void LightInjectionPass::initTexture()
 {
     glGenFramebuffers(1, &this->FBO);
     glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
-    // TODO: 以体面的方式划分格子，在第一个pass中/CPU找出每个轴的最小和最大值
-    const vec3 gridMaxBox = { 20.f, 20.f, 20.f };
-    const vec3 gridMinBox = { -20.f, -20.f, -20.f };
+    auto pResourceManager = ResourceManager::get();
+    vec3 gridMaxBox = pResourceManager->getGlobalVec3("boundingVolumeMax");
+    vec3 gridMinBox = pResourceManager->getGlobalVec3("boundingVolumeMin");
+    cout << "maxBoundingBox = " << gridMaxBox.x << ", " << gridMaxBox.y << "," << gridMaxBox.z << endl;
+    cout << "minBoundingBox = " << gridMinBox.x << ", " << gridMinBox.y << "," << gridMinBox.z << endl;
+
     const vec3 fGridSize = (gridMaxBox - gridMinBox) / float(this->uGridTextureSize);
     this->shader->setVec3("gridSize", fGridSize);
     this->shader->setVec3("gridMinBox", gridMinBox);
@@ -238,12 +242,12 @@ void LightInjectionPass::initTexture()
     glBindImageTexture(5, gridTextureB1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
     cout << "glBindImageTexture " << glGetError() << endl;
 
-    ResourceManager::get()->setTexture("girdTextureR0", gridTextureR0);
-    ResourceManager::get()->setTexture("girdTextureR1", gridTextureR1);
-    ResourceManager::get()->setTexture("girdTextureG0", gridTextureG0);
-    ResourceManager::get()->setTexture("girdTextureG1", gridTextureG1);
-    ResourceManager::get()->setTexture("girdTextureB0", gridTextureB0);
-    ResourceManager::get()->setTexture("girdTextureB1", gridTextureB1);
+    pResourceManager->setTexture("girdTextureR0", gridTextureR0);
+    pResourceManager->setTexture("girdTextureR1", gridTextureR1);
+    pResourceManager->setTexture("girdTextureG0", gridTextureG0);
+    pResourceManager->setTexture("girdTextureG1", gridTextureG1);
+    pResourceManager->setTexture("girdTextureB0", gridTextureB0);
+    pResourceManager->setTexture("girdTextureB1", gridTextureB1);
 
     this->shader->setInt("girdTextureR0", 0);
     this->shader->setInt("girdTextureR1", 1);
@@ -260,7 +264,7 @@ void LightInjectionPass::initTexture()
     glBindTexture(GL_TEXTURE_1D, 0);
     glBindImageTexture(6, testTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
     this->shader->setInt("testTexture", 6);
-    ResourceManager::get()->setTexture("testTexture", testTexture);
+    pResourceManager->setTexture("testTexture", testTexture);
 
     unsigned depthMap;
     createTexture2DNull(depthMap, SHADOW_WIDTH, SHADOW_HEIGHT, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
@@ -308,7 +312,6 @@ void LightInjectionPass::Render()
 
     // 传递的数据VAO
     // TODO: DELETE VAO
-    // TODO: 只在有值的地方采样
     // 可选方案: 在VAO中采样，直接采样几个顶点，如果被遮蔽必定有其他的顶点对上
     float* vertices = this->getSamplesRandom(this->samplesN);
     //vertices[0] = -0.5898f;

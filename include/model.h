@@ -18,6 +18,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <limits>
 using namespace std;
 
 unsigned int TextureFromFile(const char* path, const string& directory, bool gamma = false);
@@ -25,15 +26,22 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
 class Model
 {
 public:
+    // self-constructed data
+    pair<glm::vec3, glm::vec3> boudingVolume;
     // model data 
     vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
     vector<Mesh>    meshes;
     string directory;
     bool gammaCorrection;
-    Model() {}
+    Model() {
+        boudingVolume.first.x = boudingVolume.first.y = boudingVolume.first.z = numeric_limits<float>::max();
+        boudingVolume.second.x = boudingVolume.second.y = boudingVolume.second.z = numeric_limits<float>::min();
+    }
     // constructor, expects a filepath to a 3D model.
     Model(string const& path, bool gamma = false) : gammaCorrection(gamma)
     {
+        boudingVolume.first.x = boudingVolume.first.y = boudingVolume.first.z = numeric_limits<float>::max();
+        boudingVolume.second.x = boudingVolume.second.y = boudingVolume.second.z = numeric_limits<float>::min();
         loadModel(path);
     }
 
@@ -52,6 +60,8 @@ private:
     // checks all material textures of a given type and loads the textures if they're not loaded yet.
     // the required info is returned as a Texture struct.
     vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName);
+
+    pair<glm::vec3, glm::vec3> maxBoundingVolume(glm::vec3 point);
 };
 
 
