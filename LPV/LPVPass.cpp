@@ -114,7 +114,7 @@ void GetShadowSamplePass::initScene()
     // scene geom
     //Model* nanosuit = new Model("../models/Room/Room #1.obj");
     Model* nanosuit = new Model("../models/nanosuit/nanosuit.obj");
-    pResourceManager->setModel("nanosuit", nanosuit, mat4(1.f));
+    pResourceManager->setModel("renderModel", nanosuit, mat4(1.f));
 }
 
 void GetShadowSamplePass::Render()
@@ -128,7 +128,7 @@ void GetShadowSamplePass::Render()
     glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 
-    pair<Model*, mat4> modelPair = ResourceManager::get()->getModel("nanosuit");
+    pair<Model*, mat4> modelPair = ResourceManager::get()->getModel("renderModel");
     this->shader->setMat4("model", modelPair.second);
     modelPair.first->Draw(*this->shader);
 
@@ -140,22 +140,45 @@ void GetShadowSamplePass::Render()
 // @return: float数组，长度3*samplesN，数据大小[0, 1]
 float* LightInjectionPass::getSamplesRandom(unsigned samplesN)
 {
-    // TODO: 对球面均匀采样
-    float* sampleRes = new float[samplesN * 4];
-    RandomGenerator randomGenerator;
-    vector<vec3> samples3D = randomGenerator.uniform0To1By3D(samplesN);
-    for (int i = 0; i < samples3D.size(); ++i) {
-        if (i * 4 + 3 >= int(samplesN) * 4) {
-            cout << "ERROR: buffer overflow in getSamplesRandom(), samples array size="<< samples3D.size() << endl;
-            return nullptr;
-        }
-        vec3 sample = samples3D[i];
-        sampleRes[i * 4 + 0] = 1.f - 2.f * sample.x;
-        sampleRes[i * 4 + 1] = 1.f - 2.f * sample.y;
-        sampleRes[i * 4 + 2] = 1.f - 2.f * sample.z;
-        sampleRes[i * 4 + 3] = float(i);
+    vec3 lightPos = ResourceManager::get()->getPointLightPos();
+    pair<Model*, mat4> modelPair = ResourceManager::get()->getModel("renderModel");
+    int numsOfVertices = 0;
+    for (Mesh mesh : modelPair.first->meshes) {
+        numsOfVertices += mesh.vertices.size();
     }
-    return sampleRes;
+    float* samplesRes = new float[samplesN * 4];
+    RandomGenerator randomGenerator;
+    vector<int> samplesIndexArray;
+    for (int i = 0; i < samplesN; ++i) {
+        samplesIndexArray.push_back(randomGenerator.uniformNToM(0, numsOfVertices));
+    }
+    sort(samplesIndexArray.begin(), samplesIndexArray.end());
+
+    cout << "debug-info samplesIndexArray" << endl;
+    for (int i = 0; i < samplesN; ++i) {
+        cout << samplesIndexArray[i] << ", ";
+    }
+    cout << endl;
+
+    int currentVertices = 0;
+    int currentSampleIndex = 0;
+    for (Mesh mesh : modelPair.first->meshes) {
+        cout << "debug-info: current vertices=" << currentVertices << ", current sample index=" << currentVertices << ", current sample vertice=" << samplesIndexArray[currentSampleIndex] << endl;
+        while (currentSampleIndex < samplesIndexArray.size() && samplesIndexArray[currentSampleIndex] < currentVertices + mesh.vertices.size()) {
+            if (currentSampleIndex * 4 + 3 >= int(samplesN) * 4) {
+                cout << "ERROR: buffer overflow in getSamplesRandom(), samples array size="<< currentSampleIndex << endl;
+                return nullptr;
+            }
+            samplesRes[currentSampleIndex * 4 + 0] = float(mesh.vertices[samplesIndexArray[currentSampleIndex] - currentVertices].Position.x) - lightPos.x;
+            samplesRes[currentSampleIndex * 4 + 1] = float(mesh.vertices[samplesIndexArray[currentSampleIndex] - currentVertices].Position.y) - lightPos.y;
+            samplesRes[currentSampleIndex * 4 + 2] = float(mesh.vertices[samplesIndexArray[currentSampleIndex] - currentVertices].Position.z) - lightPos.z;
+            samplesRes[currentSampleIndex * 4 + 3] = float(currentSampleIndex);
+            currentSampleIndex++;
+        }
+        if (currentSampleIndex == samplesIndexArray.size()) break;
+        currentVertices += mesh.vertices.size();
+    }
+    return samplesRes;
 }
 
 void LightInjectionPass::initGlobalSettings()
@@ -432,6 +455,7 @@ void OutputCubeMapPass::Render()
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //glDepthFunc(GL_LESS);
     glDepthFunc(GL_LEQUAL);
     this->shader->use();
 

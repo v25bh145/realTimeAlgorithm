@@ -131,5 +131,5 @@ void main() {
     imageAtomicAdd(girdTextureB1, iGridIndex, vec2ToAtom(vec2(gird_SH[2].b, gird_SH[3].b)));
     
     //imageStore(testTexture, 0, vec4(gird_SH[0].r, gird_SH[1].r, gird_SH[2].r, gird_SH[3].r));
-    imageStore(testTexture, fs_in.sampleIndex, vec4(fGridIndex, 1.f));
+    imageStore(testTexture, fs_in.sampleIndex, vec4(fGridIndex, gird_SH[0].r));
 }
