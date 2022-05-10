@@ -114,6 +114,7 @@ void GetShadowSamplePass::initScene()
     // scene geom
     //Model* nanosuit = new Model("../models/Room/Room #1.obj");
     Model* nanosuit = new Model("../models/nanosuit/nanosuit.obj");
+    vec4 minMax = nanosuit->getBoundingBoxOfModel();
     pResourceManager->setModel("renderModel", nanosuit, mat4(1.f));
 }
 

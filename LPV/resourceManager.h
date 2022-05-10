@@ -23,6 +23,8 @@ private:
 	// 内建模型
 	std::unordered_map<string, std::pair<unsigned, glm::mat4>> VAOHashMap;
 	std::unordered_map<string, unsigned> textureHashMap;
+	// 全局变量
+	std::unordered_map<string, float> globalFloatMap;
 	Camera* camera;
 	//  point light only
 	glm::vec3 lightPos;
@@ -65,4 +67,8 @@ public:
 	void setVAO(string VAOName, unsigned VAO, glm::mat4 VAOTransform);
 	std::pair<unsigned, glm::mat4> deleteVAO(string VAOName);
 	std::pair<unsigned, glm::mat4> getVAO(string VAOName);
+
+	void setGlobalFloat(string varName, float var);
+	float deleteGlobalFloat(string varName);
+	float getGlobalFloat(string varName);
 };

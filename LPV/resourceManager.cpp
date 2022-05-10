@@ -119,3 +119,37 @@ std::pair<unsigned, glm::mat4> ResourceManager::getVAO(string VAOName)
 		return res->second;
 	}
 }
+
+void ResourceManager::setGlobalFloat(string varName, float var)
+{
+	auto res = this->globalFloatMap.find(varName);
+	if (res != this->globalFloatMap.end())
+		this->globalFloatMap.erase(varName);
+	this->globalFloatMap.insert({ varName, var });
+}
+
+float ResourceManager::deleteGlobalFloat(string varName)
+{
+	auto res = this->globalFloatMap.find(varName);
+	if (res == this->globalFloatMap.end()) {
+		std::cout << "WARNING: can't find anything in deleteGlobalFloat() while name = " << varName << std::endl;
+		return NULL;
+	}
+	else {
+		float resVar = res->second;
+		this->globalFloatMap.erase(varName);
+		return resVar;
+	}
+}
+
+float ResourceManager::getGlobalFloat(string varName)
+{
+	auto res = this->globalFloatMap.find(varName);
+	if (res == this->globalFloatMap.end()) {
+		std::cout << "WARNING: can't find anything in getGlobalFloat() while name = " << varName << std::endl;
+		return NULL;
+	}
+	else {
+		return res->second;
+	}
+}
