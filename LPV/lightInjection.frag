@@ -76,13 +76,18 @@ float SH(int l, int m, float theta, float phi) {
 // [-32767, +32767]
 const float compressFactor = 5000.f;
 // accuracy = 1.f / compressFactor
+// fix: 使用补码表示负整数
 uint compressFloatToUint16(float f) {
+    int compressedNum = int(floor(f * compressFactor + 0.5f));
     uint res;
-    if(f > 0.f) {
-        res = uint(abs(f) * compressFactor);
+    if(compressedNum < 0) {
+        res = (-compressedNum);
+        res = ~res;
+        res += 1;
     } else {
-        res = (1 << 15) + uint(abs(f) * compressFactor);
+        res = uint(compressedNum);
     }
+    res = res & 0xFFFF;
     return res;
 }
 uint vec2ToAtom(vec2 fColor)
@@ -131,5 +136,6 @@ void main() {
     imageAtomicAdd(girdTextureB1, iGridIndex, vec2ToAtom(vec2(gird_SH[2].b, gird_SH[3].b)));
     
     //imageStore(testTexture, 0, vec4(gird_SH[0].r, gird_SH[1].r, gird_SH[2].r, gird_SH[3].r));
-    imageStore(testTexture, fs_in.sampleIndex, vec4(fGridIndex, gird_SH[0].r));
+    imageStore(testTexture, fs_in.sampleIndex, vec4(vec2(gird_SH[0].r, gird_SH[1].r), 1.f, 1.f));
+    //imageStore(testTexture, fs_in.sampleIndex, vec4(fGridIndex, gird_SH[0].r));
 }
