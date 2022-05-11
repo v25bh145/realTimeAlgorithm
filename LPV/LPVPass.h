@@ -36,9 +36,9 @@ public:
 };
 /* =====LightInjectionPass Pass=====
 * 第二个pass
-* opengl-settings: 开启深度测试
+* opengl-settings: 关闭深度测试
 * opengl-input: 采样点，包括其worldPos与flux信息
-* opengl-output: 使用imageTextures进行存储的纹理 3*RGB 3D gridTexture
+* opengl-output: 使用imageTextures进行存储的纹理 6*RGB 3D gridTexture
 */
 class LightInjectionPass : public RenderPass {
 private:
@@ -46,6 +46,7 @@ private:
 	unsigned samplesN;
 	unsigned uGridTextureSize;
 	float* getSamplesRandom(unsigned samplesN);
+	void genSampleVAO();
 public:
 	LightInjectionPass(int indexInPass) : RenderPass(indexInPass) {
 		//this->samplesN = 50;
@@ -69,10 +70,46 @@ public:
 	* in render loop
 	*/
 	void Render() override;
+	// get
+	unsigned getSamplesN();
+	unsigned getUGridTextureSize();
 };
 /* =====lightPropogation Pass=====
-* 
+* 第三个pass
+* opengl-settings: 关闭深度测试
+* opengl-input: 光照注入grid后所有有值的grid格子，由samplesIdxInGridTexture传入并在CPU预处理
+* opengl-output: 使用imageTextures进行存储的纹理 6*RGB 3D gridTexture
 */
+class LightPropogationPass : public RenderPass {
+private:
+	// 传播比例，传播次数=uGridTextureSize*propogationRate
+	unsigned propogationCount;
+	// 由上一pass继承
+	unsigned samplesN;
+	unsigned uGridTextureSize;
+	unsigned getVAOFromSamplesIdxGridTex();
+	static bool compareU32vec3(const glm::u32vec3 v1, const glm::u32vec3 v2);
+public:
+	LightPropogationPass(int indexInPass, unsigned samplesN, unsigned uGridTextureSize, float propogationRate = 0.5f) :
+		RenderPass(indexInPass), samplesN(samplesN), uGridTextureSize(uGridTextureSize) {
+		if (propogationRate < 0.f) {
+			cout << "ERROR: propogationRate < 0.f in LightPropogationPass" << endl;
+		}
+		this->propogationCount = unsigned(floor(float(uGridTextureSize) * propogationRate + 0.5f));
+	};
+	virtual ~LightPropogationPass() {}
+	/* =================
+	* before render loop
+	*/
+	void initGlobalSettings() override;
+	void initShader() override;
+	void initTexture() override;
+	void initScene() override;
+	/* =================
+	* in render loop
+	*/
+	void Render() override;
+};
 /* =====output / test Pass=====
 * opengl-settings: 开启深度测试
 * opengl-input: cube材质(2D*6)

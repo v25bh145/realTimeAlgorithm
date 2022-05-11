@@ -280,6 +280,36 @@ void LightInjectionPass::initScene()
 
 }
 
+void LightInjectionPass::genSampleVAO()
+{
+    float* vertices = this->getSamplesRandom(this->samplesN);
+    //vertices[0] = -0.5898f;
+    //vertices[1] = -0.0318f;
+    //vertices[2] = -0.6212f;
+    if (vertices == nullptr) {
+        cout << "ERROR: failed to get samples in getSamplesLHS" << endl;
+    }
+    for (int i = 0; i < this->samplesN; ++i) {
+        cout << "sample: x, y, z, i = " << vertices[i * 4 + 0] << ", " << vertices[i * 4 + 1] << ", " << vertices[i * 4 + 2] << ", " << vertices[i * 4 + 3] << endl;
+    }
+    unsigned sampleVAO, sampleVBO;
+    glGenVertexArrays(1, &sampleVAO);
+    glGenBuffers(1, &sampleVBO);
+    glBindVertexArray(sampleVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, sampleVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * this->samplesN, vertices, GL_STATIC_DRAW);
+    cout << "TEST sampleVBO " << glGetError() << endl;
+    // sample tex
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // sample index
+    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    cout << "TEST sampleVAO " << glGetError() << endl;
+    glBindVertexArray(0);
+    ResourceManager::get()->setVAO("sampleVAO", sampleVAO, mat4(1.f));
+}
+
 void LightInjectionPass::Render()
 {
     // bind FBO
@@ -291,7 +321,7 @@ void LightInjectionPass::Render()
     glDisable(GL_DEPTH_TEST);
     // set viewport
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-    // 清空image缓存
+    // 清空image缓存 samplesIdxInGridTexture不是增量计算，不用清空
     glClearTexImage(ResourceManager::get()->getTexture("girdTextureR0"), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
     glClearTexImage(ResourceManager::get()->getTexture("girdTextureR1"), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
     glClearTexImage(ResourceManager::get()->getTexture("girdTextureG0"), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
@@ -313,37 +343,12 @@ void LightInjectionPass::Render()
     // 传递的数据VAO
     // TODO: DELETE VAO
     // 可选方案: 在VAO中采样，直接采样几个顶点，如果被遮蔽必定有其他的顶点对上
-    float* vertices = this->getSamplesRandom(this->samplesN);
-    //vertices[0] = -0.5898f;
-    //vertices[1] = -0.0318f;
-    //vertices[2] = -0.6212f;
-    if (vertices == nullptr) {
-        cout << "ERROR: failed to get samples in getSamplesLHS" << endl;
-    }
-    for (int i = 0; i < this->samplesN; ++i) {
-        cout << "sample: x, y, z, i = " << vertices[i * 4 + 0] << ", " << vertices[i * 4 + 1] << ", " << vertices[i * 4 + 2] << ", " << vertices[i * 4 + 3] << endl;
-    }
-    unsigned sampleVAO, sampleVBO;
-    glGenVertexArrays(1, &sampleVAO);
-    glGenBuffers(1, &sampleVBO);
-    glBindVertexArray(sampleVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, sampleVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * this->samplesN, vertices, GL_STATIC_DRAW);
-    cout << "TEST VBO " << glGetError() << endl;
-    // sample tex
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // sample index
-    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    cout << "TEST VAO " << glGetError() << endl;
-    glBindVertexArray(0);
-    ResourceManager::get()->setVAO("sampleVAO", sampleVAO, mat4(1.f));
+    this->genSampleVAO();
 
     pair<unsigned, mat4> VAOPair = ResourceManager::get()->getVAO("sampleVAO");
     glBindVertexArray(VAOPair.first);
     glDrawArrays(GL_POINTS, 0, this->samplesN);
-    cout << "glDrawArrays " << glGetError() << endl;
+    cout << "TEST Render glDrawArrays " << glGetError() << endl;
 
     glFinish();
 
@@ -372,6 +377,131 @@ void LightInjectionPass::Render()
     }
     cout << endl;
 
+    glBindVertexArray(0);
+    // clear FBO [!important]
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+unsigned LightInjectionPass::getSamplesN()
+{
+    return this->samplesN;
+}
+
+unsigned LightInjectionPass::getUGridTextureSize()
+{
+    return this->uGridTextureSize;
+}
+
+bool LightPropogationPass::compareU32vec3(const glm::u32vec3 v1, const glm::u32vec3 v2)
+{
+    if (v1.x < v2.x || (v1.x == v2.x && (v1.y < v2.y || (v1.y == v2.y && v1.z < v2.z)))) return true;
+    return false;
+}
+
+void LightPropogationPass::initGlobalSettings()
+{
+}
+
+void LightPropogationPass::initShader()
+{
+    this->shader = new Shader("lightPropogation.vert", "lightPropogation.frag");
+    this->shader->use();
+}
+
+void LightPropogationPass::initTexture()
+{
+    glGenFramebuffers(1, &this->FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
+    unsigned gridTextureR0 = ResourceManager::get()->getTexture("girdTextureR0");
+    unsigned gridTextureR1 = ResourceManager::get()->getTexture("girdTextureR1");
+    unsigned gridTextureG0 = ResourceManager::get()->getTexture("girdTextureG0");
+    unsigned gridTextureG1 = ResourceManager::get()->getTexture("girdTextureG1");
+    unsigned gridTextureB0 = ResourceManager::get()->getTexture("girdTextureB0");
+    unsigned gridTextureB1 = ResourceManager::get()->getTexture("girdTextureB1");
+    glBindImageTexture(0, gridTextureR0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+    glBindImageTexture(1, gridTextureR1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+    glBindImageTexture(2, gridTextureG0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+    glBindImageTexture(3, gridTextureG1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+    glBindImageTexture(4, gridTextureB0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+    glBindImageTexture(5, gridTextureB1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+    this->shader->setInt("girdTextureR0", 0);
+    this->shader->setInt("girdTextureR1", 1);
+    this->shader->setInt("girdTextureG0", 2);
+    this->shader->setInt("girdTextureG1", 3);
+    this->shader->setInt("girdTextureB0", 4);
+    this->shader->setInt("girdTextureB1", 5);
+}
+
+void LightPropogationPass::initScene()
+{
+    this->shader->setInt("propogationCount", this->propogationCount);
+}
+
+unsigned LightPropogationPass::getVAOFromSamplesIdxGridTex()
+{
+    glBindTexture(GL_TEXTURE_1D, ResourceManager::get()->getTexture("samplesIdxInGridTexture"));
+    unsigned* indexData = new unsigned[this->samplesN * 4];
+    glGetTexImage(GL_TEXTURE_1D, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, indexData);
+    vector<u32vec3> indexArray;
+    cout << "TEST DATA samplesIdxInGridTexture " << glGetError() << endl;
+    for (int i = 0; i < this->samplesN; ++i) {
+        if (indexData[i * 4 + 3]) {
+            indexArray.push_back({ indexData[i * 4 + 0] ,indexData[i * 4 + 1] ,indexData[i * 4 + 2] });
+        }
+        else {
+            cout << "debug-info: invalid bit in i = " << i << endl;
+        }
+    }
+    // sort vec3
+    sort(indexArray.begin(), indexArray.end(), LightPropogationPass::compareU32vec3);
+    // unique
+    auto pRes = unique(indexArray.begin(), indexArray.end());
+    indexArray.erase(pRes, indexArray.end());
+    unsigned* inputIndexData = new unsigned[indexArray.size() * 4];
+    for (int i = 0; i < indexArray.size(); ++i) {
+        u32vec3 v = indexArray[i];
+        inputIndexData[0] = v.x;
+        inputIndexData[1] = v.y;
+        inputIndexData[2] = v.z;
+        inputIndexData[3] = i;
+    }
+    unsigned idxVAO, idxVBO;
+    glGenVertexArrays(1, &idxVAO);
+    glGenBuffers(1, &idxVBO);
+    glBindVertexArray(idxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, idxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(unsigned) * 4 * indexArray.size(), inputIndexData, GL_STATIC_DRAW);
+    cout << "TEST idxVBO " << glGetError() << endl;
+    // sample tex
+    glVertexAttribPointer(0, 3, GL_UNSIGNED_INT, GL_FALSE, 4 * sizeof(unsigned), (void*)0);
+    glEnableVertexAttribArray(0);
+    // sample index
+    glVertexAttribPointer(1, 1, GL_UNSIGNED_INT, GL_FALSE, 4 * sizeof(unsigned), (void*)(3 * sizeof(unsigned)));
+    glEnableVertexAttribArray(1);
+    cout << "TEST idxVAO " << glGetError() << endl;
+    glBindVertexArray(0);
+    return idxVAO;
+}
+void LightPropogationPass::Render()
+{
+    // bind FBO
+    glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
+    // use shader
+    this->shader->use();
+    // clear buffer [!important]
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_DEPTH_TEST);
+    // set viewport
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    // bind VAO
+    
+    // get grid index VAO from
+    unsigned VAO = this->getVAOFromSamplesIdxGridTex();
+    glBindVertexArray(VAO);
+    // draw
+    glDrawArrays(GL_POINTS, 0, this->samplesN);
+    cout << "TEST LightPropogationPass glDrawArrays " << glGetError() << endl;
+    // clear VAO
     glBindVertexArray(0);
     // clear FBO [!important]
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

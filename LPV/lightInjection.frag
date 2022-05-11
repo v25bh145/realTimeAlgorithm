@@ -134,6 +134,6 @@ void main() {
     imageAtomicAdd(girdTextureG1, iGridIndex, vec2ToAtom(vec2(gird_SH[2].g, gird_SH[3].g)));
     imageAtomicAdd(girdTextureB0, iGridIndex, vec2ToAtom(vec2(gird_SH[0].b, gird_SH[1].b)));
     imageAtomicAdd(girdTextureB1, iGridIndex, vec2ToAtom(vec2(gird_SH[2].b, gird_SH[3].b)));
-    
-    imageStore(samplesIdxInGridTexture, fs_in.sampleIndex, uvec4(iGridIndex, 1.f));
+    // 最后一位为有效位(bool)
+    imageStore(samplesIdxInGridTexture, fs_in.sampleIndex, uvec4(iGridIndex, 1));
 }
