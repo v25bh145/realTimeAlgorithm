@@ -50,8 +50,8 @@ public:
 	LightInjectionPass(int indexInPass) : RenderPass(indexInPass) {
 		//this->samplesN = 50;
 		//this->uGridTextureSize = 50;
-		this->samplesN = 2;
-		this->uGridTextureSize = 1;
+		this->samplesN = 25;
+		this->uGridTextureSize = 10;
 	};
 	LightInjectionPass(int indexInPass, int samplesN, int uGridTextureSize) : RenderPass(indexInPass) {
 		this->samplesN = samplesN;
@@ -70,6 +70,9 @@ public:
 	*/
 	void Render() override;
 };
+/* =====lightPropogation Pass=====
+* 
+*/
 /* =====output / test Pass=====
 * opengl-settings: 开启深度测试
 * opengl-input: cube材质(2D*6)

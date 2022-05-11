@@ -13,7 +13,7 @@ layout (r32ui, binding = 3) uniform uimage3D girdTextureG1;
 layout (r32ui, binding = 4) uniform uimage3D girdTextureB0;
 layout (r32ui, binding = 5) uniform uimage3D girdTextureB1;
 
-layout (rgba32f, binding = 6) uniform image1D testTexture;
+layout (rgba32ui, binding = 6) uniform uimage1D samplesIdxInGridTexture;
 
 in VS_OUT {
 	vec3 worldPos;
@@ -135,7 +135,5 @@ void main() {
     imageAtomicAdd(girdTextureB0, iGridIndex, vec2ToAtom(vec2(gird_SH[0].b, gird_SH[1].b)));
     imageAtomicAdd(girdTextureB1, iGridIndex, vec2ToAtom(vec2(gird_SH[2].b, gird_SH[3].b)));
     
-    //imageStore(testTexture, 0, vec4(gird_SH[0].r, gird_SH[1].r, gird_SH[2].r, gird_SH[3].r));
-    imageStore(testTexture, fs_in.sampleIndex, vec4(vec2(gird_SH[0].r, gird_SH[1].r), 1.f, 1.f));
-    //imageStore(testTexture, fs_in.sampleIndex, vec4(fGridIndex, gird_SH[0].r));
+    imageStore(samplesIdxInGridTexture, fs_in.sampleIndex, uvec4(iGridIndex, 1.f));
 }

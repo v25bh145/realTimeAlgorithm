@@ -257,14 +257,14 @@ void LightInjectionPass::initTexture()
     this->shader->setInt("girdTextureB1", 5);
 
     // test texture
-    GLuint testTexture;
-    glGenTextures(1, &testTexture);
-    glBindTexture(GL_TEXTURE_1D, testTexture);
-    glTexStorage1D(GL_TEXTURE_1D, 1, GL_RGBA32F, this->samplesN);
+    GLuint samplesIdxInGridTexture;
+    glGenTextures(1, &samplesIdxInGridTexture);
+    glBindTexture(GL_TEXTURE_1D, samplesIdxInGridTexture);
+    glTexStorage1D(GL_TEXTURE_1D, 1, GL_RGBA32UI, this->samplesN);
     glBindTexture(GL_TEXTURE_1D, 0);
-    glBindImageTexture(6, testTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-    this->shader->setInt("testTexture", 6);
-    pResourceManager->setTexture("testTexture", testTexture);
+    glBindImageTexture(6, samplesIdxInGridTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32UI);
+    this->shader->setInt("samplesIdxInGridTexture", 6);
+    pResourceManager->setTexture("samplesIdxInGridTexture", samplesIdxInGridTexture);
 
     unsigned depthMap;
     createTexture2DNull(depthMap, SHADOW_WIDTH, SHADOW_HEIGHT, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
@@ -359,11 +359,11 @@ void LightInjectionPass::Render()
     cout << endl;
     
     // get test data from testTexture
-    glBindTexture(GL_TEXTURE_1D, ResourceManager::get()->getTexture("testTexture"));
-    float* testData2 = new float[this->samplesN * 4];
-    glGetTexImage(GL_TEXTURE_1D, 0, GL_RGBA, GL_FLOAT, testData2);
+    glBindTexture(GL_TEXTURE_1D, ResourceManager::get()->getTexture("samplesIdxInGridTexture"));
+    unsigned* testData2 = new unsigned[this->samplesN * 4];
+    glGetTexImage(GL_TEXTURE_1D, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, testData2);
 
-    cout << "TEST DATA testTexture " << glGetError() << endl;
+    cout << "TEST DATA samplesIdxInGridTexture " << glGetError() << endl;
     for (int i = 0; i < this->samplesN; ++i) {
         cout << testData2[i * 4 + 0] << ", ";
         cout << testData2[i * 4 + 1] << ", ";
