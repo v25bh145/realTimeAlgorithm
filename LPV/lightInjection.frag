@@ -81,7 +81,7 @@ uint compressFloatToUint16(float f) {
     int compressedNum = int(floor(f * compressFactor + 0.5f));
     uint res;
     if(compressedNum < 0) {
-        res = (-compressedNum);
+        res = uint(-compressedNum);
         res = ~res;
         res += 1;
     } else {

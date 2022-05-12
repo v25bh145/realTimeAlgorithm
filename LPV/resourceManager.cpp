@@ -31,8 +31,10 @@ float ResourceManager::getFarPlane()
 }
 void ResourceManager::setModel(string modelName, Model* model, glm::mat4 modelTransform) {
 	auto res = this->modelHashMap.find(modelName);
-	if (res != this->modelHashMap.end())
+	if (res != this->modelHashMap.end()) {
+		std::cout << "WARNING:  find something in setModel() while name = " << modelName << std::endl;
 		this->modelHashMap.erase(modelName);
+	}
 	this->modelHashMap.insert({ modelName, {model, modelTransform} });
 }
 std::pair<Model*, glm::mat4> ResourceManager::deleteModel(string modelName) {
@@ -60,9 +62,10 @@ std::pair<Model*, glm::mat4> ResourceManager::getModel(string modelName) {
 
 void ResourceManager::setTexture(string textureName, unsigned texture) {
 	auto res = this->textureHashMap.find(textureName);
-	if (res != this->textureHashMap.end())
+	if (res != this->textureHashMap.end()) {
+		std::cout << "WARNING:  find something in setTexture() while name = " << textureName << std::endl;
 		this->textureHashMap.erase(textureName);
-
+	}
 	this->textureHashMap.insert({ textureName, texture });
 }
 unsigned ResourceManager::deleteTexture(string textureName) {
@@ -91,8 +94,10 @@ unsigned ResourceManager::getTexture(string textureName) {
 void ResourceManager::setVAO(string VAOName, unsigned VAO, glm::mat4 VAOTransform)
 {
 	auto res = this->VAOHashMap.find(VAOName);
-	if (res != this->VAOHashMap.end())
+	if (res != this->VAOHashMap.end()) {
+		std::cout << "WARNING:  find something in setVAO() while name = " << VAOName << std::endl;
 		this->VAOHashMap.erase(VAOName);
+	}
 	this->VAOHashMap.insert({ VAOName, {VAO, VAOTransform} });
 }
 
@@ -125,8 +130,10 @@ std::pair<unsigned, glm::mat4> ResourceManager::getVAO(string VAOName)
 void ResourceManager::setGlobalVec3(string varName, vec3 var)
 {
 	auto res = this->globalVec3Map.find(varName);
-	if (res != this->globalVec3Map.end())
+	if (res != this->globalVec3Map.end()) {
+		std::cout << "WARNING:  find something in setGlobalVec3() while name = " << varName << std::endl;
 		this->globalVec3Map.erase(varName);
+	}
 	this->globalVec3Map.insert({ varName, var });
 }
 

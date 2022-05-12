@@ -177,6 +177,8 @@
     <None Include="getShadowSample.vert" />
     <None Include="lightInjection.frag" />
     <None Include="lightInjection.vert" />
+    <None Include="lightPropogation.frag" />
+    <None Include="lightPropogation.vert" />
     <None Include="output2D.frag" />
     <None Include="output2D.vert" />
     <None Include="outputCubeMap.frag" />

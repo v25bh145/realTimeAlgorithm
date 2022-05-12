@@ -124,5 +124,11 @@
     <None Include="lightInjection.frag">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="lightPropogation.vert">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="lightPropogation.frag">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

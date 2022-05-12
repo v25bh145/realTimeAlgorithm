@@ -84,6 +84,8 @@ class LightPropogationPass : public RenderPass {
 private:
 	// 传播比例，传播次数=uGridTextureSize*propogationRate
 	unsigned propogationCount;
+	// 在渲染时动态计算
+	unsigned uniquedPoints;
 	// 由上一pass继承
 	unsigned samplesN;
 	unsigned uGridTextureSize;

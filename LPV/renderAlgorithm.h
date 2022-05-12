@@ -13,11 +13,11 @@ public:
 		initVAO = -1;
 		GetShadowSamplePass* getShadowSamplePass = new GetShadowSamplePass(0);
 		LightInjectionPass* lightInjectionPass = new LightInjectionPass(1);
-		//Output2DPass* output2DPass = new Output2DPass(1, "testTexture");
-		OutputCubeMapPass* outputCubeMapPass = new OutputCubeMapPass(1, "worldPosMap");
+		LightPropogationPass* lightPropogationPass = new LightPropogationPass(2, lightInjectionPass->getSamplesN(), lightInjectionPass->getUGridTextureSize());
+		OutputCubeMapPass* outputCubeMapPass = new OutputCubeMapPass(3, "worldPosMap");
 		rps.push_back(getShadowSamplePass);
 		rps.push_back(lightInjectionPass);
-		//rps.push_back(output2DPass);
+		rps.push_back(lightPropogationPass);
 		rps.push_back(outputCubeMapPass);
 	};
 	void globalSettings();
