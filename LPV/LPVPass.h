@@ -84,6 +84,8 @@ class LightPropogationPass : public RenderPass {
 private:
 	// 传播比例，传播次数=uGridTextureSize*propogationRate
 	unsigned propogationCount;
+	// 衰减阈值
+	float propogationGate;
 	// 在渲染时动态计算
 	unsigned uniquedPoints;
 	// 由上一pass继承
@@ -92,8 +94,8 @@ private:
 	unsigned getVAOFromSamplesIdxGridTex();
 	static bool compareU32vec3(const glm::u32vec3 v1, const glm::u32vec3 v2);
 public:
-	LightPropogationPass(int indexInPass, unsigned samplesN, unsigned uGridTextureSize, float propogationRate = 0.5f) :
-		RenderPass(indexInPass), samplesN(samplesN), uGridTextureSize(uGridTextureSize) {
+	LightPropogationPass(int indexInPass, unsigned samplesN, unsigned uGridTextureSize, float propogationRate = 0.3f, float propogationGate = 0.005f) :
+		RenderPass(indexInPass), samplesN(samplesN), uGridTextureSize(uGridTextureSize), propogationGate(propogationGate) {
 		if (propogationRate < 0.f) {
 			cout << "ERROR: propogationRate < 0.f in LightPropogationPass" << endl;
 		}

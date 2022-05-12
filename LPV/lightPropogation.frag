@@ -12,6 +12,10 @@ layout (r32ui, binding = 5) uniform uimage3D girdTextureB1;
 layout (rgba32ui, binding = 6) uniform uimage1D testTextureUint;
 layout (rgba32f, binding = 7) uniform image1D testTextureFloat;
 
+uniform int propogationCount;
+uniform float propogationGate;
+uniform int iGridSize;
+
 in VS_OUT {
     flat ivec3 gridIndex;
     flat int sampleIndex;
@@ -93,7 +97,105 @@ vec2 atomToVec2(uint atom)
     res.g = deCompressUint16ToFloat((atom >> 16) & 0xFFFF);
     return res;
 }
+uint compressFloatToUint16(float f) {
+    int compressedNum = int(floor(f * compressFactor + 0.5f));
+    uint res;
+    if(compressedNum < 0) {
+        res = uint(-compressedNum);
+        res = ~res;
+        res += 1;
+    } else {
+        res = uint(compressedNum);
+    }
+    res = res & 0xFFFF;
+    return res;
+}
+uint vec2ToAtom(vec2 fColor)
+{
+    uvec2 uColor;
+    uColor.r = compressFloatToUint16(fColor.r);
+    uColor.g = compressFloatToUint16(fColor.g);
+    return uColor.r | (uColor.g << 16);
+}
+vec3 storeGridInputSH[4];
+void storeGrid(ivec3 grid) {
+    imageAtomicAdd(girdTextureR0, grid, vec2ToAtom(vec2(storeGridInputSH[0].r, storeGridInputSH[1].r)));
+    imageAtomicAdd(girdTextureR1, grid, vec2ToAtom(vec2(storeGridInputSH[2].r, storeGridInputSH[3].r)));
+    imageAtomicAdd(girdTextureG0, grid, vec2ToAtom(vec2(storeGridInputSH[0].g, storeGridInputSH[1].g)));
+    imageAtomicAdd(girdTextureG1, grid, vec2ToAtom(vec2(storeGridInputSH[2].g, storeGridInputSH[3].g)));
+    imageAtomicAdd(girdTextureB0, grid, vec2ToAtom(vec2(storeGridInputSH[0].b, storeGridInputSH[1].b)));
+    imageAtomicAdd(girdTextureB1, grid, vec2ToAtom(vec2(storeGridInputSH[2].b, storeGridInputSH[3].b)));
+}
+vec3 loadGridOutputSH[4];
+void loadGrid(ivec3 grid) {
+    vec2 vR0 = atomToVec2(imageLoad(girdTextureR0, grid).x);
+    vec2 vR1 = atomToVec2(imageLoad(girdTextureR1, grid).x);
+    vec2 vG0 = atomToVec2(imageLoad(girdTextureG0, grid).x);
+    vec2 vG1 = atomToVec2(imageLoad(girdTextureG1, grid).x);
+    vec2 vB0 = atomToVec2(imageLoad(girdTextureB0, grid).x);
+    vec2 vB1 = atomToVec2(imageLoad(girdTextureB1, grid).x);
+    loadGridOutputSH[0] = vec3(vR0.r, vG0.r, vB0.r);
+    loadGridOutputSH[1] = vec3(vR0.g, vG0.g, vB0.g);
+    loadGridOutputSH[2] = vec3(vR1.r, vG1.r, vB1.r);
+    loadGridOutputSH[3] = vec3(vR1.g, vG1.g, vB1.g);
+}
+// right=0.400562f
+// 4*front back up down = 0.423698f
+// 0 front 1 right 2 up 3 back 4 left 5 down
+void propogate(ivec3 nowGrid, int fromSide, int count) {
+    if(count == propogationCount) return;
 
+    loadGrid(nowGrid);
+    vec3 girdNow_SH[4] = loadGridOutputSH;
+
+    ivec3 deltaOfSideTable[6] = {
+        ivec3(1, 0, 0),
+        ivec3(0, 1, 0),
+        ivec3(0, 0, 1),
+        ivec3(-1, 0, 0),
+        ivec3(0, -1, 0),
+        ivec3(0, 0, -1),
+    };
+    int oppoSideTable[6] = {3, 4, 5, 0, 1, 2};
+    ivec4 nearSideTable[6] = {
+        ivec4(1, 2, 4, 5),
+        ivec4(0, 2, 3, 5),
+        ivec4(0, 1, 3, 4),
+        ivec4(1, 2, 4, 5),
+        ivec4(0, 2, 3, 5),
+        ivec4(0, 1, 3, 4),
+    };
+    // 立体角
+    float ArOppo = 0.400562f;
+    int oppoSide = oppoSideTable[fromSide];
+    ivec3 oppoGrid = nowGrid + deltaOfSideTable[oppoSide];
+    if(oppoGrid.x >= 0 && oppoGrid.y >= 0 && oppoGrid.z >= 0 && oppoGrid.x < iGridSize && oppoGrid.y < iGridSize && oppoGrid.z < iGridSize) {
+        vec3 girdNext_SH[4];
+        // TODO: 对面格子的转移
+
+        storeGridInputSH = girdNext_SH;
+        storeGrid(oppoGrid);
+         
+        // TODO: propogateGate
+        propogate(oppoGrid, oppoSideTable[oppoSide], count + 1);
+    }
+    // 立体角
+    float ArNear = 0.423698f;
+    ivec4 nearSide = nearSideTable[fromSide];
+
+    int nearSide1 = nearSide.x;
+    ivec3 nearGrid1 = nowGrid + deltaOfSideTable[nearSide1];
+    if(nearGrid1.x >= 0 && nearGrid1.y >= 0 && nearGrid1.z >= 0 && nearGrid1.x < iGridSize && nearGrid1.y < iGridSize && nearGrid1.z < iGridSize) {
+        vec3 girdNext_SH[4];
+        // TODO: 邻近格子的转移 1
+
+        storeGridInputSH = girdNext_SH;
+        storeGrid(nearGrid1);
+
+        // TODO: propogateGate
+        propogate(nearGrid1, oppoSideTable[nearSide1], count + 1);
+    }
+}
 void main() {
     uvec4 res = imageLoad(girdTextureR0, fs_in.gridIndex);
     uint uRes = uint(res.x);

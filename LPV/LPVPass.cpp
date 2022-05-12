@@ -461,7 +461,9 @@ void LightPropogationPass::initTexture()
 
 void LightPropogationPass::initScene()
 {
-    //this->shader->setInt("propogationCount", this->propogationCount);
+    this->shader->setInt("propogationCount", this->propogationCount);
+    this->shader->setFloat("propogationGate", this->propogationGate);
+    this->shader->setInt("gridSize", int(this->uGridTextureSize));
 }
 
 unsigned LightPropogationPass::getVAOFromSamplesIdxGridTex()
