@@ -40,19 +40,14 @@ $$
 $$
 L'_i=L_{up}y_i(N_x)+L_{down}y_i(N_y)+L_{front}y_i(N_z)+L_{back}y_i(N_j)+L_{right}y_i(N_k)\;\;\;\;\;(5)
 $$
+## 计算体积角（估算）
 
 ```C++
 int main() {
 	const double PI = acos(-1.f);
 	unsigned sampleCount = 100000000;
-	//unsigned now = 0;
 	unsigned inCount = 0;
 	for (int i = 0; i < sampleCount; ++i) {
-		//now++;
-		//if (now == 10000000)cout << "10%" << endl;
-		//if (now == 30000000)cout << "30%" << endl;
-		//if (now == 50000000)cout << "50%" << endl;
-		//if (now == 80000000)cout << "80%" << endl;
 		RandomGenerator randomGenerator;
 		double x1 = randomGenerator.uniform0To1();
 		double x2 = randomGenerator.uniform0To1();
