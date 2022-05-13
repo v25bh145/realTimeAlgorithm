@@ -94,8 +94,9 @@ private:
 	// 一共多少格
 	unsigned uGridTextureSize;
 
-	unsigned getVAOFromSamplesIdxGridTex();
+	unsigned getVAOFromSamplesIdxGridTex(int count);
 	static bool compareU32vec3(const glm::u32vec3 v1, const glm::u32vec3 v2);
+	static bool compareVec3(const glm::vec3 v1, const glm::vec3 v2);
 public:
 	LightPropogationPass(int indexInPass, unsigned samplesN, unsigned uGridTextureSize, float propogationRate = 0.3f, float propogationGate = 0.005f) :
 		RenderPass(indexInPass), samplesN(samplesN), uGridTextureSize(uGridTextureSize), propogationGate(propogationGate) {
@@ -105,7 +106,7 @@ public:
 		this->uniquedPoints = 0;
 		this->propogationCount = unsigned(floor(float(uGridTextureSize) * propogationRate + 0.5f));
 		// 6 * (5^12)
-		this->propogationCount = this->propogationCount <= 13 ? this->propogationCount : 13;
+		this->propogationCount = this->propogationCount <= 5 ? this->propogationCount : 5;
 		this->propogationCount = 3;
 	};
 	virtual ~LightPropogationPass() {}
