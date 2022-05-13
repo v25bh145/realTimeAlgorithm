@@ -1,7 +1,7 @@
 #version 420 core
 layout(location = 0) in vec3 aGridIndex;
 layout(location = 1) in float aSampleDirection;
-layout(location = 1) in float aSampleIndex;
+layout(location = 2) in float aSampleIndex;
 
 out VS_OUT {
     flat ivec3 gridIndex;

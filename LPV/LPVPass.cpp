@@ -78,7 +78,7 @@ void GetShadowSamplePass::initTexture()
     GLenum bufs[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 	glDrawBuffers(2, bufs);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!: status=" << glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
+		cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!: status=" << glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -263,7 +263,7 @@ void LightInjectionPass::initTexture()
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthMap, 0);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!: status=" << glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
+        cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!: status=" << glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -373,12 +373,11 @@ void LightInjectionPass::Render()
         cout << testData[i] << " ";
     }
     cout << endl;
-    
+    /*
     // get test data from samplesIdxInGridTexture
     glBindTexture(GL_TEXTURE_1D, ResourceManager::get()->getTexture("samplesIdxInGridTexture"));
     unsigned* testData2 = new unsigned[this->samplesN * 4];
     glGetTexImage(GL_TEXTURE_1D, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, testData2);
-
     cout << "TEST DATA samplesIdxInGridTexture " << glGetError() << endl;
     for (int i = 0; i < this->samplesN; ++i) {
         cout << testData2[i * 4 + 0] << ", ";
@@ -387,6 +386,7 @@ void LightInjectionPass::Render()
         cout << testData2[i * 4 + 3] <<endl;
     }
     cout << endl;
+    */
 
     glBindVertexArray(0);
     // clear FBO [!important]
@@ -444,7 +444,7 @@ void LightPropogationPass::initTexture()
     createTexture2DNull(depthMap, SHADOW_WIDTH, SHADOW_HEIGHT, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthMap, 0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!: status=" << glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
+        cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!: status=" << glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -465,14 +465,14 @@ unsigned LightPropogationPass::getVAOFromSamplesIdxGridTex(int count)
         glBindTexture(GL_TEXTURE_1D, ResourceManager::get()->getTexture("samplesIdxInGridTexture"));
         unsigned* indexData = new unsigned[this->samplesN * 4];
         glGetTexImage(GL_TEXTURE_1D, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, indexData);
+        cout << "TEST DATA samplesIdxInGridTexture in getVAOFromSamplesIdxGridTex " << glGetError() << endl;
         vector<u32vec3> indexArray;
-        std::cout << "TEST DATA samplesIdxInGridTexture in getVAOFromSamplesIdxGridTex " << glGetError() << endl;
         for (int i = 0; i < this->samplesN; ++i) {
             if (indexData[i * 4 + 3]) {
                 indexArray.push_back({ indexData[i * 4 + 0] ,indexData[i * 4 + 1] ,indexData[i * 4 + 2] });
             }
             else {
-                std::cout << "debug-info: invalid bit in i = " << i << endl;
+                cout << "debug-info: invalid bit in i = " << i << endl;
             }
         }
         // sort vec3
@@ -482,7 +482,7 @@ unsigned LightPropogationPass::getVAOFromSamplesIdxGridTex(int count)
         indexArray.erase(pRes, indexArray.end());
         this->uniquedPoints = indexArray.size();
         inputIndexData = new float[this->uniquedPoints * 5];
-        std::cout << "inputIndexData" << endl;
+        cout << "inputIndexData size=" << this->uniquedPoints << endl;
         for (int i = 0; i < indexArray.size(); ++i) {
             u32vec3 v = indexArray[i];
             inputIndexData[i * 5 + 0] = float(v.x);
@@ -490,7 +490,7 @@ unsigned LightPropogationPass::getVAOFromSamplesIdxGridTex(int count)
             inputIndexData[i * 5 + 2] = float(v.z);
             inputIndexData[i * 5 + 3] = -1.f;
             inputIndexData[i * 5 + 4] = float(i);
-            std::cout << inputIndexData[i * 5 + 0] << ", " << inputIndexData[i * 5 + 1] << ", " << inputIndexData[i * 5 + 2] << ", " << inputIndexData[i * 5 + 3] << ", " << inputIndexData[i * 5 + 4] << endl;
+            //cout << inputIndexData[i * 5 + 0] << ", " << inputIndexData[i * 5 + 1] << ", " << inputIndexData[i * 5 + 2] << ", " << inputIndexData[i * 5 + 3] << ", " << inputIndexData[i * 5 + 4] << endl;
         }
     }
     else {
@@ -521,6 +521,7 @@ unsigned LightPropogationPass::getVAOFromSamplesIdxGridTex(int count)
         indexArray.erase(pRes, indexArray.end());
         this->uniquedPoints = indexArray.size();
         inputIndexData = new float[this->uniquedPoints * 5];
+        cout << "inputIndexData size=" << this->uniquedPoints << endl;
         for (int i = 0; i < indexArray.size(); ++i) {
             vec3 v = indexArray[i];
             inputIndexData[i * 5 + 0] = v.x;
@@ -529,7 +530,7 @@ unsigned LightPropogationPass::getVAOFromSamplesIdxGridTex(int count)
             // 向哪个方向传播(27个方向 3进制 000 -> 222)
             inputIndexData[i * 5 + 3] = -1.f;
             inputIndexData[i * 5 + 4] = float(i);
-            std::cout << inputIndexData[i * 5 + 0] << ", " << inputIndexData[i * 5 + 1] << ", " << inputIndexData[i * 5 + 2] << ", " << inputIndexData[i * 5 + 3] << ", " << inputIndexData[i * 5 + 4] << endl;
+            //cout << inputIndexData[i * 5 + 0] << ", " << inputIndexData[i * 5 + 1] << ", " << inputIndexData[i * 5 + 2] << ", " << inputIndexData[i * 5 + 3] << ", " << inputIndexData[i * 5 + 4] << endl;
         }
     }
     if(lastData != nullptr)
@@ -541,7 +542,7 @@ unsigned LightPropogationPass::getVAOFromSamplesIdxGridTex(int count)
     glBindVertexArray(idxVAO);
     glBindBuffer(GL_ARRAY_BUFFER, idxVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 5 * this->uniquedPoints, inputIndexData, GL_STATIC_DRAW);
-    std::cout << "TEST idxVBO " << glGetError() << endl;
+    cout << "TEST idxVBO in getVAOFromSamplesIdxGridTex " << glGetError()<<", when count=" << count << endl;
     // sample tex
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -551,7 +552,7 @@ unsigned LightPropogationPass::getVAOFromSamplesIdxGridTex(int count)
     // sample index
     glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(4 * sizeof(float)));
     glEnableVertexAttribArray(2);
-    std::cout << "TEST idxVAO " << glGetError() << endl;
+    cout << "TEST idxVAO in getVAOFromSamplesIdxGridTex " << glGetError() << ", when count=" << count << endl;
     glBindVertexArray(0);
     return idxVAO;
 }
@@ -583,8 +584,7 @@ void LightPropogationPass::Render()
     cout << "glBindImageTexture " << glGetError() << endl;
     for (int count = 0; count < this->propogationCount; count++) {
         unsigned VAO = this->getVAOFromSamplesIdxGridTex(count);
-
-        // test texture uint
+        /* testTextureDebug
         GLuint testTextureUint;
         glGenTextures(1, &testTextureUint);
         glBindTexture(GL_TEXTURE_1D, testTextureUint);
@@ -598,10 +598,12 @@ void LightPropogationPass::Render()
         glBindTexture(GL_TEXTURE_1D, testTextureFloat);
         // 实际会使用uniquedPoints大小的空间，不过保证uniquedPoints<=samplesN
         glTexStorage1D(GL_TEXTURE_1D, 1, GL_RGBA32F, this->uniquedPoints);
+        cout << "TEST LightPropogationPass glTexStorage1D " << glGetError() << endl;
         glBindTexture(GL_TEXTURE_1D, 0);
         this->shader->setInt("testTextureFloat", 7);
         glBindImageTexture(6, testTextureUint, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32UI);
         glBindImageTexture(7, testTextureFloat, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+        */
 
         // bind VAO
         // get grid index VAO from
@@ -612,7 +614,7 @@ void LightPropogationPass::Render()
         cout << "TEST LightPropogationPass glDrawArrays " << glGetError() << ", " << this->uniquedPoints << endl;
 
         glDeleteVertexArrays(1, &VAO);
-        
+        /* testTextureDebug
         // get test data from testTextureUint
         glBindTexture(GL_TEXTURE_1D, testTextureUint);
         unsigned* testData = new unsigned[this->uniquedPoints * 4];
@@ -637,7 +639,7 @@ void LightPropogationPass::Render()
             cout << testData2[i * 4 + 3] << endl;
         }
         cout << endl;
-
+        */
         //get test data from gridTextureR0
         glBindTexture(GL_TEXTURE_3D, ResourceManager::get()->getTexture("gridTextureR0"));
         unsigned* testData3 = new unsigned[this->uGridTextureSize * this->uGridTextureSize * this->uGridTextureSize];

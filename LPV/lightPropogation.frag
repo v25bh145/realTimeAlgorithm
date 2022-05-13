@@ -8,9 +8,10 @@ layout (r32ui, binding = 3) uniform uimage3D girdTextureG1;
 // girdTextureB: c1 ~ c4
 layout (r32ui, binding = 4) uniform uimage3D girdTextureB0;
 layout (r32ui, binding = 5) uniform uimage3D girdTextureB1;
-
+/* testTextureDebug 
 layout (rgba32ui, binding = 6) uniform uimage1D testTextureUint;
 layout (rgba32f, binding = 7) uniform image1D testTextureFloat;
+*/
 
 uniform float propogationGate;
 
@@ -258,6 +259,8 @@ void propogateOnce(ivec3 nowGrid, int fromSide) {
 
 void main() {
     propogateOnce(fs_in.gridIndex, -1);
-    imageStore(testTextureUint, fs_in.sampleIndex, uvec4(1, 1, 1, 1));
-    imageStore(testTextureFloat, fs_in.sampleIndex, vec4(SH(1, -1, 0, 0), 1.f, 1.f, 1.f));
+    /* testTextureDebug 
+    imageStore(testTextureUint, fs_in.sampleIndex, uvec4(1, 2, 3, 4));
+    imageStore(testTextureFloat, fs_in.sampleIndex, vec4(1.f, 1.f, 1.f, 1.f));
+    */
 }

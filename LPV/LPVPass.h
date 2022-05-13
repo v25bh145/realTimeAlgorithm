@@ -107,7 +107,6 @@ public:
 		this->propogationCount = unsigned(floor(float(uGridTextureSize) * propogationRate + 0.5f));
 		// 6 * (5^12)
 		this->propogationCount = this->propogationCount <= 5 ? this->propogationCount : 5;
-		this->propogationCount = 3;
 	};
 	virtual ~LightPropogationPass() {}
 	/* =================
