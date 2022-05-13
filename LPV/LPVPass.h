@@ -44,6 +44,7 @@ class LightInjectionPass : public RenderPass {
 private:
 	// samplesN on theta & phi(cubemap)
 	unsigned samplesN;
+	// 一共多少格
 	unsigned uGridTextureSize;
 	float* getSamplesRandom(unsigned samplesN);
 	void genSampleVAO();
@@ -90,7 +91,9 @@ private:
 	unsigned uniquedPoints;
 	// 由上一pass继承
 	unsigned samplesN;
+	// 一共多少格
 	unsigned uGridTextureSize;
+
 	unsigned getVAOFromSamplesIdxGridTex();
 	static bool compareU32vec3(const glm::u32vec3 v1, const glm::u32vec3 v2);
 public:
@@ -99,7 +102,11 @@ public:
 		if (propogationRate < 0.f) {
 			cout << "ERROR: propogationRate < 0.f in LightPropogationPass" << endl;
 		}
+		this->uniquedPoints = 0;
 		this->propogationCount = unsigned(floor(float(uGridTextureSize) * propogationRate + 0.5f));
+		// 6 * (5^12)
+		this->propogationCount = this->propogationCount <= 13 ? this->propogationCount : 13;
+		this->propogationCount = 3;
 	};
 	virtual ~LightPropogationPass() {}
 	/* =================

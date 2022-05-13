@@ -14,7 +14,10 @@ layout (rgba32f, binding = 7) uniform image1D testTextureFloat;
 
 uniform int propogationCount;
 uniform float propogationGate;
-uniform int iGridSize;
+
+uniform int uGridTextureSize;
+uniform vec3 fGridSize;
+uniform vec3 gridMinBox;
 
 in VS_OUT {
     flat ivec3 gridIndex;
@@ -73,6 +76,7 @@ float SH(int l, int m, float theta, float phi) {
     else return sqrt2 * K(l, m) * sin(-m * phi) * P(cos(theta), l, -m);
 }
 // [-32767, +32767]
+const float PI = acos(-1.f);
 const float compressFactor = 5000.f;
 // accuracy = 1.f / compressFactor
 // fix: 使用补码表示负整数
@@ -139,14 +143,32 @@ void loadGrid(ivec3 grid) {
     loadGridOutputSH[2] = vec3(vR1.r, vG1.r, vB1.r);
     loadGridOutputSH[3] = vec3(vR1.g, vG1.g, vB1.g);
 }
+bool gridOutOfRange(ivec3 nowGrid) {
+    if(0 <= nowGrid.x && nowGrid.x < uGridTextureSize
+    && 0 <= nowGrid.y && nowGrid.y < uGridTextureSize
+    && 0 <= nowGrid.z && nowGrid.z < uGridTextureSize)
+        return true;
+    return false;
+}
+vec3 getGridCenter(ivec3 grid) {
+    vec3 fGrid = vec3(grid) + vec3(0.5f, 0.5f, 0.5f);
+    vec3 res = vec3(
+        gridMinBox.x + fGrid.x * fGridSize.x,
+        gridMinBox.y + fGrid.y * fGridSize.y,
+        gridMinBox.z + fGrid.z * fGridSize.z
+    );
+    return res;
+}
+
 // right=0.400562f
 // 4*front back up down = 0.423698f
 // 0 front 1 right 2 up 3 back 4 left 5 down
-void propogate(ivec3 nowGrid, int fromSide, int count) {
-    if(count == propogationCount) return;
 
+// 从nowGrid开始向其他5/6面的格子传输
+void propogateOnce(ivec3 nowGrid, int fromSide) {
     loadGrid(nowGrid);
     vec3 girdNow_SH[4] = loadGridOutputSH;
+    vec3 nowGridCenter = getGridCenter(nowGrid); // O point
 
     ivec3 deltaOfSideTable[6] = {
         ivec3(1, 0, 0),
@@ -165,43 +187,117 @@ void propogate(ivec3 nowGrid, int fromSide, int count) {
         ivec4(0, 2, 3, 5),
         ivec4(0, 1, 3, 4),
     };
-    // 立体角
-    float ArOppo = 0.400562f;
-    int oppoSide = oppoSideTable[fromSide];
-    ivec3 oppoGrid = nowGrid + deltaOfSideTable[oppoSide];
-    if(oppoGrid.x >= 0 && oppoGrid.y >= 0 && oppoGrid.z >= 0 && oppoGrid.x < iGridSize && oppoGrid.y < iGridSize && oppoGrid.z < iGridSize) {
+    // 向5个格子传输
+    for(int i = 0; i < 6; i++) {
+        if(i == fromSide) continue;
+
+        ivec3 nextGrid = nowGrid + deltaOfSideTable[i];
+        if(gridOutOfRange(nextGrid)) continue;
+
+        vec3 nextGridCenter = getGridCenter(nextGrid); // A point
+
         vec3 girdNext_SH[4];
-        // TODO: 对面格子的转移
+        // 向1个格子的5个面传输
+        for(int j = 0; j < 6; j++) {
+            if(j == i) continue;
+            vec3 LiOX;
+            vec3 edgeCenter = vec3(
+                nextGridCenter.x + float(deltaOfSideTable[j].x) * fGridSize.x / 2.f,
+                nextGridCenter.y + float(deltaOfSideTable[j].y) * fGridSize.y / 2.f,
+                nextGridCenter.z + float(deltaOfSideTable[j].z) * fGridSize.z / 2.f
+            ); // X point
+            vec3 OX = normalize(edgeCenter - nowGridCenter);
+            float thetaOX = acos(OX.z);
+            float phiOX = acos(OX.x / sin(thetaOX));
+            vec3 XO = -OX;
+
+            for (int l = 0; l < 2; ++l) {
+                for (int m = -l; m <= l; ++m) {
+                    int index = l * (l + 1) + m;
+                    LiOX += SH(l, m, thetaOX, phiOX) * girdNext_SH[index];
+                }
+            }
+            vec3 Nx = normalize(nextGridCenter - edgeCenter);
+            float cosAngle = abs(dot(Nx, XO));
+            vec3 LiXA = LiOX * cosAngle / PI;
+            vec3 LEdgeToA = LiXA;
+            if(j == oppoSideTable[i]) {
+                LEdgeToA *= 0.400562f;
+            } else {
+                LEdgeToA *= 0.423698f;
+            }
+            vec3 AX = -Nx;
+            float thetaAX = acos(AX.z);
+            float phiAX = acos(AX.x / sin(thetaAX));
+            float EdgeSH[4];
+            // calculate theta & phi
+            for (int l = 0; l < 2; ++l) {
+                for (int m = -l; m <= l; ++m) {
+                    int index = l * (l + 1) + m;
+                    EdgeSH[index] = SH(l, m, thetaAX, phiAX);
+                }
+            }
+            for(int i = 0; i < 2 * 2; i++) {
+                girdNext_SH[i] = LEdgeToA * EdgeSH[i];
+            }
+        }
 
         storeGridInputSH = girdNext_SH;
-        storeGrid(oppoGrid);
-         
-        // TODO: propogateGate
-        propogate(oppoGrid, oppoSideTable[oppoSide], count + 1);
-    }
-    // 立体角
-    float ArNear = 0.423698f;
-    ivec4 nearSide = nearSideTable[fromSide];
+        storeGrid(nextGrid);
 
-    int nearSide1 = nearSide.x;
-    ivec3 nearGrid1 = nowGrid + deltaOfSideTable[nearSide1];
-    if(nearGrid1.x >= 0 && nearGrid1.y >= 0 && nearGrid1.z >= 0 && nearGrid1.x < iGridSize && nearGrid1.y < iGridSize && nearGrid1.z < iGridSize) {
-        vec3 girdNext_SH[4];
-        // TODO: 邻近格子的转移 1
-
-        storeGridInputSH = girdNext_SH;
-        storeGrid(nearGrid1);
-
-        // TODO: propogateGate
-        propogate(nearGrid1, oppoSideTable[nearSide1], count + 1);
+        //propogate(nextGrid, oppoSideTable[i], count + 1);
     }
 }
+const int maxArraySize = 6 * 5 * 5 * 5;
+// 交换使用
+ivec4 propogationTmp1[maxArraySize];
+ivec4 propogationTmp2[maxArraySize];
 void main() {
-    uvec4 res = imageLoad(girdTextureR0, fs_in.gridIndex);
-    uint uRes = uint(res.x);
-    vec2 vRes = atomToVec2(uRes);
 
-    uint test = 0xFF7D;
-    imageStore(testTextureUint, fs_in.sampleIndex, uvec4(res.x, test, (test >> 15), 1));
-    imageStore(testTextureFloat, fs_in.sampleIndex, vec4(vRes, deCompressUint16ToFloat(0xFF7D), 1.f));
+    int treeLeafSize = 6;
+    int oppoSideTable[6] = {3, 4, 5, 0, 1, 2};
+    ivec3 deltaOfSideTable[6] = {
+        ivec3(1, 0, 0),
+        ivec3(0, 1, 0),
+        ivec3(0, 0, 1),
+        ivec3(-1, 0, 0),
+        ivec3(0, -1, 0),
+        ivec3(0, 0, -1),
+    };
+    // 第一次遍历
+    propogateOnce(fs_in.gridIndex, -1);
+    for(int i = 0; i < 6; i++) {
+        propogationTmp1[i] = ivec4(ivec3(fs_in.gridIndex + deltaOfSideTable[i]), i);
+    }
+    // 第二次及以上
+    for(int i = 1; i < propogationCount; ++i) {
+        // 这层树的节点
+        int lastLeafSize = treeLeafSize;
+        treeLeafSize *= 5;
+        // 读取propogationTmp1，存入propogationTmp2
+        if(i % 2 == 1) {
+            int newIdx = 0;
+            for(int j = 0; j < lastLeafSize; j++) {
+                propogateOnce(propogationTmp1[j].rgb, oppoSideTable[propogationTmp1[j].a]);
+                for(int k = 0; k < 6; k++) {
+                    if(k == j) continue;
+                    propogationTmp2[newIdx] = ivec4(propogationTmp1[j].rgb + deltaOfSideTable[k], k);
+                    newIdx++;
+                }
+            }
+        // 读取propogationTmp2，存入propogationTmp1
+        } else {
+            int newIdx = 0;
+            for(int j = 0; j < lastLeafSize; j++) {
+                propogateOnce(propogationTmp2[j].rgb, oppoSideTable[propogationTmp2[j].a]);
+                for(int k = 0; k < 6; k++) {
+                    if(k == j) continue;
+                    propogationTmp1[newIdx] = ivec4(propogationTmp2[j].rgb + deltaOfSideTable[k], k);
+                    newIdx++;
+                }
+            }
+        }
+    }
+    imageStore(testTextureUint, fs_in.sampleIndex, uvec4(uint(maxArraySize), 1, 1, 1));
+    imageStore(testTextureFloat, fs_in.sampleIndex, vec4(1.f, 1.f, 1.f, 1.f));
 }

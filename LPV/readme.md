@@ -38,5 +38,43 @@ $$
 $$
 最后得出所有5个面到点A的辐亮度之和即是点A的辐亮度，用球谐函数表示如下，其中$\vec N$表示该面对应的法线，$y_i(x)$表示球谐函数：
 $$
-L'_i=L_{up,i}y_i(N_x)+L_{down,i}y_i(N_y)+L_{front,i}y_i(N_z)+L_{back,i}y_i(N_j)+L_{right,i}y_i(N_k)\;\;\;\;\;(5)
+L'_i=L_{up}y_i(N_x)+L_{down}y_i(N_y)+L_{front}y_i(N_z)+L_{back}y_i(N_j)+L_{right}y_i(N_k)\;\;\;\;\;(5)
 $$
+
+```C++
+int main() {
+	const double PI = acos(-1.f);
+	unsigned sampleCount = 100000000;
+	//unsigned now = 0;
+	unsigned inCount = 0;
+	for (int i = 0; i < sampleCount; ++i) {
+		//now++;
+		//if (now == 10000000)cout << "10%" << endl;
+		//if (now == 30000000)cout << "30%" << endl;
+		//if (now == 50000000)cout << "50%" << endl;
+		//if (now == 80000000)cout << "80%" << endl;
+		RandomGenerator randomGenerator;
+		double x1 = randomGenerator.uniform0To1();
+		double x2 = randomGenerator.uniform0To1();
+		double x = 2 * cos(2 * PI * x2) * sqrt(x1 * (1.f - x1));
+		double y = 2 * sin(2 * PI * x2) * sqrt(x1 * (1.f - x1));
+		double z = 1.f - 2.f * x1;
+		// 正面
+		double factor = 3.f / x;
+		double yA = y * factor;
+		double zA = z * factor;
+		if (x > 0.f && -1.f <= yA && yA <= 1.f && -1.f <= zA && zA <= 1.f) {
+			inCount++;
+		}
+		// 侧面
+		//double factor = 1.f / z;
+		//double xA = x * factor;
+		//double yA = y * factor;
+		//if (1.f <= xA && xA <= 3.f && -1.f <= yA && yA <= 1.f) {
+		//	inCount++;
+		//}
+	}
+	cout << 4.f * PI * double(inCount) / double(sampleCount) << endl;
+}
+```
+

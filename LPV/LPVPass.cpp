@@ -204,6 +204,7 @@ void LightInjectionPass::initTexture()
     cout << "minBoundingBox = " << gridMinBox.x << ", " << gridMinBox.y << "," << gridMinBox.z << endl;
 
     const vec3 fGridSize = (gridMaxBox - gridMinBox) / float(this->uGridTextureSize);
+    pResourceManager->setGlobalVec3("fGridSize", fGridSize);
     this->shader->setVec3("gridSize", fGridSize);
     this->shader->setVec3("gridMinBox", gridMinBox);
 
@@ -461,9 +462,13 @@ void LightPropogationPass::initTexture()
 
 void LightPropogationPass::initScene()
 {
+    auto pResourceManager = ResourceManager::get();
     this->shader->setInt("propogationCount", this->propogationCount);
     this->shader->setFloat("propogationGate", this->propogationGate);
-    this->shader->setInt("gridSize", int(this->uGridTextureSize));
+
+    this->shader->setInt("uGridTextureSize", int(this->uGridTextureSize));
+    this->shader->setVec3("fGridSize", pResourceManager->getGlobalVec3("fGridSize"));
+    this->shader->setVec3("gridMinBox", pResourceManager->getGlobalVec3("boundingVolumeMin"));
 }
 
 unsigned LightPropogationPass::getVAOFromSamplesIdxGridTex()
@@ -574,6 +579,16 @@ void LightPropogationPass::Render()
         cout << testData2[i * 4 + 1] << ", ";
         cout << testData2[i * 4 + 2] << ", ";
         cout << testData2[i * 4 + 3] << endl;
+    }
+    cout << endl;
+
+    //get test data from gridTextureR0
+    glBindTexture(GL_TEXTURE_3D, ResourceManager::get()->getTexture("gridTextureR0"));
+    unsigned* testData3 = new unsigned[this->uGridTextureSize * this->uGridTextureSize * this->uGridTextureSize];
+    glGetTexImage(GL_TEXTURE_3D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, testData3);
+    cout << "TEST DATA gridTextureR0 " << glGetError() << endl;
+    for (int i = 0; i < this->uGridTextureSize * this->uGridTextureSize * this->uGridTextureSize; ++i) {
+        cout << testData3[i] << " ";
     }
     cout << endl;
 
