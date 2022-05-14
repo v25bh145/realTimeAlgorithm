@@ -179,6 +179,8 @@
     <None Include="lightInjection.vert" />
     <None Include="lightPropogation.frag" />
     <None Include="lightPropogation.vert" />
+    <None Include="LPVOutput.frag" />
+    <None Include="LPVOutput.vert" />
     <None Include="output2D.frag" />
     <None Include="output2D.vert" />
     <None Include="outputCubeMap.frag" />

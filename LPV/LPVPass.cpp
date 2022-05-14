@@ -6,7 +6,7 @@
 // 1. 输出纹理值(float)
 
 //float* data = new float[512 * 512 * 3];
-//glBindTexture(GL_TEXTURE_CUBE_MAP, this->fluxMap);
+//glBindTexture(GL_TEXTURE_CUBE_MAP, this->shadowFluxMap);
 //glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + 2, 0, GL_RGB, GL_FLOAT, data);
 //cout << data[2] << endl;
 
@@ -63,18 +63,18 @@ void GetShadowSamplePass::initTexture()
 	glGenFramebuffers(1, &this->FBO);
     //this->FBO = 0;
 	glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
-    unsigned shadowDepthMap, worldPosMap, fluxMap;
+    unsigned shadowDepthMap, shadowWorldPosMap, shadowFluxMap;
 	// texture
     createTextureCubeMapNull(shadowDepthMap, SHADOW_WIDTH, SHADOW_HEIGHT, GL_DEPTH_COMPONENT);
-	createTextureCubeMapNull(worldPosMap, SHADOW_WIDTH, SHADOW_HEIGHT, GL_RGB);
-	createTextureCubeMapNull(fluxMap, SHADOW_WIDTH, SHADOW_HEIGHT, GL_RGB);
+	createTextureCubeMapNull(shadowWorldPosMap, SHADOW_WIDTH, SHADOW_HEIGHT, GL_RGB);
+	createTextureCubeMapNull(shadowFluxMap, SHADOW_WIDTH, SHADOW_HEIGHT, GL_RGB);
 
-    ResourceManager::get()->setTexture("worldPosMap", worldPosMap);
-    ResourceManager::get()->setTexture("fluxMap", fluxMap);
+    ResourceManager::get()->setTexture("shadowWorldPosMap", shadowWorldPosMap);
+    ResourceManager::get()->setTexture("shadowFluxMap", shadowFluxMap);
 
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowDepthMap, 0);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, worldPosMap, 0);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, fluxMap, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, shadowWorldPosMap, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, shadowFluxMap, 0);
     GLenum bufs[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 	glDrawBuffers(2, bufs);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -341,15 +341,15 @@ void LightInjectionPass::Render()
     glBindImageTexture(6, samplesIdxInGridTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32UI);
     cout << "glBindImageTexture " << glGetError() << endl;
     // 绑定输入的纹理
-    unsigned worldPosMap = ResourceManager::get()->getTexture("worldPosMap");
-    this->shader->setInt("worldPosMap", 0);
+    unsigned shadowWorldPosMap = ResourceManager::get()->getTexture("shadowWorldPosMap");
+    this->shader->setInt("shadowWorldPosMap", 0);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, worldPosMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, shadowWorldPosMap);
 
-    unsigned fluxMap = ResourceManager::get()->getTexture("fluxMap");
-    this->shader->setInt("fluxMap", 1);
+    unsigned shadowFluxMap = ResourceManager::get()->getTexture("shadowFluxMap");
+    this->shader->setInt("shadowFluxMap", 1);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, fluxMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, shadowFluxMap);
 
     // 传递的数据VAO
     // TODO: DELETE VAO
@@ -657,6 +657,25 @@ void LightPropogationPass::Render()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void GBufferPass::initGlobalSettings()
+{
+}
+
+void GBufferPass::initShader()
+{
+}
+
+void GBufferPass::initTexture()
+{
+}
+
+void GBufferPass::initScene()
+{
+}
+
+void GBufferPass::Render()
+{
+}
 
 void OutputCubeMapPass::initGlobalSettings()
 {

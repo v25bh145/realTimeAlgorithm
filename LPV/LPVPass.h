@@ -121,6 +121,32 @@ public:
 	*/
 	void Render() override;
 };
+/* =====GBufferPass Pass=====
+* opengl-settings: 开启深度测试
+* opengl-input: 所有点、照相机、视角变换
+* opengl-output: 2D 屏幕空间贴图 漫反射(物体表面的，不是flux) 顶点坐标 法线
+*/
+class GBufferPass : public RenderPass {
+private:
+	// 一共多少格
+	unsigned uGridTextureSize;
+public:
+	GBufferPass(int indexInPass, unsigned uGridTextureSize)
+		:RenderPass(indexInPass), uGridTextureSize(uGridTextureSize) {
+	};
+	virtual ~GBufferPass() {}
+	/* =================
+	* before render loop
+	*/
+	void initGlobalSettings() override;
+	void initShader() override;
+	void initTexture() override;
+	void initScene() override;
+	/* =================
+	* in render loop
+	*/
+	void Render() override;
+};
 /* =====output / test Pass=====
 * opengl-settings: 开启深度测试
 * opengl-input: cube材质(2D*6)

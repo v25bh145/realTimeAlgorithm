@@ -130,5 +130,11 @@
     <None Include="lightPropogation.frag">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="LPVOutput.vert">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="LPVOutput.frag">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>
