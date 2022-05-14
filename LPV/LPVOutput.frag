@@ -157,6 +157,7 @@ void main() {
 	// indirect
     vec3 gridSH[4];
 	vec3 worldPosToMinBox = worldPos - gridMinBox;
+    worldPosToMinBox = max(worldPosToMinBox, vec3(0.f, 0.f, 0.f));
 	vec3 fGridIndex = {floor(worldPosToMinBox.x / fGridSize.x), floor(worldPosToMinBox.y / fGridSize.y), floor(worldPosToMinBox.z / fGridSize.z)};
     ivec3 iGridIndex = {int(fGridIndex.x), int(fGridIndex.y), int(fGridIndex.z)};
     vec2 vR0 = atomToVec2(imageLoad(girdTextureR0, iGridIndex).x);

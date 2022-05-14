@@ -46,7 +46,11 @@ private:
 	unsigned samplesN;
 	// 一共多少格
 	int iGridTextureSize;
-	float* getSamplesRandom(unsigned samplesN);
+	float* getSamplesRandomInMesh(unsigned samplesN);
+	float* getSamplesRandomSphereUniform(unsigned samplesN);
+	// will change samplesN in object
+	float* getSamplesSphereUniform(unsigned samplesN);
+	float* getSamplesHalfMeshHalfRandomSphereUniform(unsigned samplesN, float propotionOfMesh);
 	void genSampleVAO();
 public:
 	LightInjectionPass(int indexInPass) : RenderPass(indexInPass) {
@@ -96,7 +100,8 @@ private:
 
 	unsigned getVAOFromSamplesIdxGridTex(int count);
 	static bool compareU32vec3(const glm::u32vec3 v1, const glm::u32vec3 v2);
-	static bool compareVec3(const glm::vec3 v1, const glm::vec3 v2);
+	static bool comparePairVec3(const std::pair<glm::vec3, glm::vec3> v1, const std::pair<glm::vec3, glm::vec3> v2);
+	static bool equalToPairVec3(const std::pair<glm::vec3, glm::vec3> v1, const std::pair<glm::vec3, glm::vec3> v2);
 public:
 	LightPropogationPass(int indexInPass, unsigned samplesN, int iGridTextureSize, float propogationRate = 0.3f, float propogationGate = 0.005f) :
 		RenderPass(indexInPass), samplesN(samplesN), iGridTextureSize(iGridTextureSize), propogationGate(propogationGate) {
@@ -107,6 +112,7 @@ public:
 		this->propogationCount = unsigned(floor(float(iGridTextureSize) * propogationRate + 0.5f));
 		// 6 * (5^12)
 		this->propogationCount = this->propogationCount <= 5 ? this->propogationCount : 5;
+		this->propogationCount = 5;
 	};
 	virtual ~LightPropogationPass() {}
 	/* =================

@@ -21,7 +21,7 @@ uniform vec3 gridMinBox;
 
 in VS_OUT {
     flat ivec3 gridIndex;
-	flat int sampleDirection;
+	flat ivec3 originIndex;
     flat int sampleIndex;
 } fs_in;
 
@@ -167,7 +167,7 @@ vec3 getGridCenter(ivec3 grid) {
 
 // 从nowGrid开始向其他5/6面的格子传输
 const float EPSILON = 0.000001f;
-void propogateOnce(ivec3 nowGrid, int fromSide) {
+void propogateOnce(ivec3 nowGrid, ivec3 originGrid) {
     loadGrid(nowGrid);
     vec3 girdNow_SH[4] = loadGridOutputSH;
     vec3 nowGridCenter = getGridCenter(nowGrid); // O point
@@ -191,9 +191,12 @@ void propogateOnce(ivec3 nowGrid, int fromSide) {
     };
     // 向5个格子传输
     for(int i = 0; i < 6; i++) {
-        if(i == fromSide) continue;
-
         ivec3 nextGrid = nowGrid + deltaOfSideTable[i];
+        ivec3 originToNow = nowGrid - originGrid;
+        ivec3 originToNext = nextGrid - originGrid;
+        if(abs(originToNext.x) < abs(originToNow.x)) continue;
+        if(abs(originToNext.y) < abs(originToNow.y)) continue;
+        if(abs(originToNext.z) < abs(originToNow.z)) continue;
         if(gridOutOfRange(nextGrid)) continue;
 
         vec3 nextGridCenter = getGridCenter(nextGrid); // A point
@@ -258,7 +261,7 @@ void propogateOnce(ivec3 nowGrid, int fromSide) {
 }
 
 void main() {
-    propogateOnce(fs_in.gridIndex, -1);
+    propogateOnce(fs_in.gridIndex, fs_in.originIndex);
     /* testTextureDebug 
     imageStore(testTextureUint, fs_in.sampleIndex, uvec4(1, 2, 3, 4));
     imageStore(testTextureFloat, fs_in.sampleIndex, vec4(1.f, 1.f, 1.f, 1.f));

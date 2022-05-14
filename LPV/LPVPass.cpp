@@ -114,8 +114,8 @@ void GetShadowSamplePass::initScene()
     * geom & transform & shader set
     */
     // scene geom
-    Model* nanosuit = new Model("../models/Room/Room #1.obj");
-    //Model* nanosuit = new Model("../models/nanosuit/nanosuit.obj");
+    //Model* nanosuit = new Model("../models/Room/Room #1.obj");
+    Model* nanosuit = new Model("../models/nanosuit/nanosuit.obj");
     pResourceManager->setModel("renderModel", nanosuit, mat4(1.f));
     pResourceManager->setGlobalVec3("boundingVolumeMin", nanosuit->boudingVolume.first);
     pResourceManager->setGlobalVec3("boundingVolumeMax", nanosuit->boudingVolume.second);
@@ -142,7 +142,7 @@ void GetShadowSamplePass::Render()
 }
 
 // @return: float数组，长度3*samplesN，数据大小[0, 1]
-float* LightInjectionPass::getSamplesRandom(unsigned samplesN)
+float* LightInjectionPass::getSamplesRandomInMesh(unsigned samplesN)
 {
     vec3 lightPos = ResourceManager::get()->getPointLightPos();
     pair<Model*, mat4> modelPair = ResourceManager::get()->getModel("renderModel");
@@ -170,7 +170,7 @@ float* LightInjectionPass::getSamplesRandom(unsigned samplesN)
         //cout << "debug-info: current vertices=" << currentVertices << ", current sample index=" << currentVertices << ", current sample vertice=" << samplesIndexArray[currentSampleIndex] << endl;
         while (currentSampleIndex < samplesIndexArray.size() && samplesIndexArray[currentSampleIndex] < currentVertices + mesh.vertices.size()) {
             if (currentSampleIndex * 4 + 3 >= int(samplesN) * 4) {
-                cout << "ERROR: buffer overflow in getSamplesRandom(), samples array size="<< currentSampleIndex << endl;
+                cout << "ERROR: buffer overflow in getSamplesRandomInMesh(), samples array size="<< currentSampleIndex << endl;
                 return nullptr;
             }
             samplesRes[currentSampleIndex * 4 + 0] = float(mesh.vertices[samplesIndexArray[currentSampleIndex] - currentVertices].Position.x) - lightPos.x;
@@ -182,6 +182,73 @@ float* LightInjectionPass::getSamplesRandom(unsigned samplesN)
         if (currentSampleIndex == samplesIndexArray.size()) break;
         currentVertices += mesh.vertices.size();
     }
+    return samplesRes;
+}
+
+float* LightInjectionPass::getSamplesRandomSphereUniform(unsigned samplesN)
+{
+    float* samplesRes = new float[samplesN * 4];
+    RandomGenerator randomGenerator;
+    for (int i = 0; i < samplesN; ++i) {
+        float x1 = randomGenerator.uniform0To1();
+        float x2 = randomGenerator.uniform0To1();
+        float tmp = sqrt(x1 * (1.f - x1));
+        constexpr float PI = pi<float>();
+        samplesRes[i * 4 + 0] = 2.f * cos(2.f * PI * x2) * tmp;
+        samplesRes[i * 4 + 1] = 2.f * sin(2.f * PI * x2) * tmp;
+        samplesRes[i * 4 + 2] = 1.f - 2.f * x1;
+        samplesRes[i * 4 + 3] = float(i);
+    }
+    return samplesRes;
+}
+
+float* LightInjectionPass::getSamplesSphereUniform(unsigned samplesN)
+{
+    RandomGenerator randomGenerator;
+    unsigned samplesSqrtN = floor(sqrt(samplesN) + 0.5f);
+    //this->samplesN = samplesSqrtN * samplesSqrtN;
+
+    float* samplesRes = new float[samplesN * 4];
+    constexpr float PI = pi<float>();
+    const float stridePhi = PI / samplesSqrtN;
+    const float strideTheta = 2.f * PI / samplesSqrtN;
+    float theta = strideTheta;
+    for (int i = 0; i < samplesSqrtN; ++i) {
+        float phi = stridePhi;
+        for (int j = 0; j < samplesSqrtN; ++j) {
+            float sinTheta = sin(theta);
+            int index = i * samplesSqrtN + j;
+            samplesRes[index * 4 + 0] = cos(phi) * sinTheta;
+            samplesRes[index * 4 + 1] = sin(phi) * sinTheta;
+            samplesRes[index * 4 + 2] = cos(theta);
+            samplesRes[index * 4 + 3] = float(index);
+            phi += stridePhi;
+        }
+        theta += strideTheta;
+    }
+    return samplesRes;
+}
+float* LightInjectionPass::getSamplesHalfMeshHalfRandomSphereUniform(unsigned samplesN, float propotionOfMesh)
+{
+    float* samplesRes = new float[samplesN * 4];
+    unsigned samplesN1 = unsigned(float(samplesN) * propotionOfMesh), samplesN2 = samplesN - samplesN1;
+    float* sampleRes1 = LightInjectionPass::getSamplesRandomInMesh(samplesN1);
+    float* sampleRes2 = LightInjectionPass::getSamplesRandomInMesh(samplesN2);
+    for (int i = 0; i < samplesN1; ++i) {
+        samplesRes[i * 4 + 0] = sampleRes1[i * 4 + 0];
+        samplesRes[i * 4 + 1] = sampleRes1[i * 4 + 1];
+        samplesRes[i * 4 + 2] = sampleRes1[i * 4 + 2];
+        samplesRes[i * 4 + 3] = i;
+    }
+    for (int i = 0; i < samplesN2; ++i) {
+        int index = i + samplesN1;
+        samplesRes[index * 4 + 0] = sampleRes2[i * 4 + 0];
+        samplesRes[index * 4 + 1] = sampleRes2[i * 4 + 1];
+        samplesRes[index * 4 + 2] = sampleRes2[i * 4 + 2];
+        samplesRes[index * 4 + 3] = float(index);
+    }
+    delete sampleRes1;
+    delete sampleRes2;
     return samplesRes;
 }
 
@@ -215,7 +282,7 @@ void LightInjectionPass::initTexture()
     glBindTexture(GL_TEXTURE_3D, gridTextureR0);
     glTexStorage3D(GL_TEXTURE_3D, 1, GL_R32UI, this->iGridTextureSize, this->iGridTextureSize, this->iGridTextureSize);
     //glTexImage3D(GL_TEXTURE_3D, 0, GL_R32UI, this->iGridTextureSize, this->iGridTextureSize, this->iGridTextureSize, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
-    cout << "glTexImage3D " << glGetError() << endl;
+    //cout << "glTexImage3D " << glGetError() << endl;
     glGenTextures(1, &gridTextureR1);
     glBindTexture(GL_TEXTURE_3D, gridTextureR1);
     glTexStorage3D(GL_TEXTURE_3D, 1, GL_R32UI, this->iGridTextureSize, this->iGridTextureSize, this->iGridTextureSize);
@@ -270,36 +337,38 @@ void LightInjectionPass::initTexture()
 float* sampleVertices;
 void LightInjectionPass::initScene()
 {
-    sampleVertices = this->getSamplesRandom(this->samplesN);
+    
+    sampleVertices = this->getSamplesRandomSphereUniform(this->samplesN);
+    //sampleVertices = this->getSamplesRandomInMesh(this->samplesN);
+    //sampleVertices = this->getSamplesRandomSphereUniform(this->samplesN);
+    //sampleVertices = this->getSamplesHalfMeshHalfRandomSphereUniform(this->samplesN, 0.f);
 }
 
 void LightInjectionPass::genSampleVAO()
 {
     float* vertices = sampleVertices;
-    //vertices[0] = -0.5898f;
-    //vertices[1] = -0.0318f;
-    //vertices[2] = -0.6212f;
+    //float* vertices = this->getSamplesRandomSphereUniform(this->samplesN);
     if (vertices == nullptr) {
         cout << "ERROR: failed to get samples in getSamplesLHS" << endl;
     }
-    for (int i = 0; i < this->samplesN; ++i) {
-        cout << "sample: x, y, z, i = " << vertices[i * 4 + 0] << ", " << vertices[i * 4 + 1] << ", " << vertices[i * 4 + 2] << ", " << vertices[i * 4 + 3] << endl;
-    }
+    //for (int i = 0; i < this->samplesN; ++i) {
+        //cout << "sample: x, y, z, i = " << vertices[i * 4 + 0] << ", " << vertices[i * 4 + 1] << ", " << vertices[i * 4 + 2] << ", " << vertices[i * 4 + 3] << endl;
+    //}
     unsigned sampleVAO, sampleVBO;
     glGenVertexArrays(1, &sampleVAO);
     glGenBuffers(1, &sampleVBO);
     glBindVertexArray(sampleVAO);
     glBindBuffer(GL_ARRAY_BUFFER, sampleVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * this->samplesN, vertices, GL_STATIC_DRAW);
-    cout << "TEST sampleVBO " << glGetError() << endl;
+    //cout << "TEST sampleVBO " << glGetError() << endl;
     // sample tex
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     // sample index
     glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-    cout << "TEST sampleVAO " << glGetError() << endl;
-    cout << "VAO id = " << sampleVAO << endl;
+    //cout << "TEST sampleVAO " << glGetError() << endl;
+    //cout << "VAO id = " << sampleVAO << endl;
     glBindVertexArray(0);
     ResourceManager::get()->setVAO("sampleVAO", sampleVAO, mat4(1.f));
 }
@@ -340,7 +409,7 @@ void LightInjectionPass::Render()
     glBindImageTexture(4, gridTextureB0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
     glBindImageTexture(5, gridTextureB1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
     glBindImageTexture(6, samplesIdxInGridTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32UI);
-    cout << "glBindImageTexture " << glGetError() << endl;
+    //cout << "glBindImageTexture " << glGetError() << endl;
     // 绑定输入的纹理
     unsigned shadowWorldPosMap = ResourceManager::get()->getTexture("shadowWorldPosMap");
     this->shader->setInt("shadowWorldPosMap", 0);
@@ -359,9 +428,9 @@ void LightInjectionPass::Render()
 
     pair<unsigned, mat4> VAOPair = ResourceManager::get()->getVAO("sampleVAO");
     glBindVertexArray(VAOPair.first);
-    cout << "VAO id = " << VAOPair.first << endl;
+    //cout << "VAO id = " << VAOPair.first << endl;
     glDrawArrays(GL_POINTS, 0, this->samplesN);
-    cout << "TEST Render glDrawArrays " << glGetError() << endl;
+    //cout << "TEST Render glDrawArrays " << glGetError() << endl;
 
     glFinish();
 
@@ -374,20 +443,20 @@ void LightInjectionPass::Render()
     //    cout << testData[i] << " ";
     //}
     //cout << endl;
-    /*
+    
     // get test data from samplesIdxInGridTexture
-    glBindTexture(GL_TEXTURE_1D, ResourceManager::get()->getTexture("samplesIdxInGridTexture"));
-    unsigned* testData2 = new unsigned[this->samplesN * 4];
-    glGetTexImage(GL_TEXTURE_1D, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, testData2);
-    cout << "TEST DATA samplesIdxInGridTexture " << glGetError() << endl;
-    for (int i = 0; i < this->samplesN; ++i) {
-        cout << testData2[i * 4 + 0] << ", ";
-        cout << testData2[i * 4 + 1] << ", ";
-        cout << testData2[i * 4 + 2] << ", ";
-        cout << testData2[i * 4 + 3] <<endl;
-    }
-    cout << endl;
-    */
+    //glBindTexture(GL_TEXTURE_1D, ResourceManager::get()->getTexture("samplesIdxInGridTexture"));
+    //unsigned* testData2 = new unsigned[this->samplesN * 4];
+    //glGetTexImage(GL_TEXTURE_1D, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, testData2);
+    //cout << "TEST DATA samplesIdxInGridTexture " << glGetError() << endl;
+    //for (int i = 0; i < this->samplesN; ++i) {
+    //    cout << testData2[i * 4 + 0] << ", ";
+    //    cout << testData2[i * 4 + 1] << ", ";
+    //    cout << testData2[i * 4 + 2] << ", ";
+    //    cout << testData2[i * 4 + 3] <<endl;
+    //}
+    //cout << endl;
+    
 
     glBindVertexArray(0);
     // clear FBO [!important]
@@ -409,9 +478,16 @@ bool LightPropogationPass::compareU32vec3(const glm::u32vec3 v1, const glm::u32v
     if (v1.x < v2.x || (v1.x == v2.x && (v1.y < v2.y || (v1.y == v2.y && v1.z < v2.z)))) return true;
     return false;
 }
-bool LightPropogationPass::compareVec3(const glm::vec3 v1, const glm::vec3 v2)
+bool LightPropogationPass::comparePairVec3(const std::pair<glm::vec3, glm::vec3> v1, const std::pair<glm::vec3, glm::vec3> v2)
 {
-    if (v1.x < v2.x || (v1.x == v2.x && (v1.y < v2.y || (v1.y == v2.y && v1.z < v2.z)))) return true;
+    if (v1.first.x < v2.first.x || (v1.first.x == v2.first.x && (v1.first.y < v2.first.y || (v1.first.y == v2.first.y && v1.first.z < v2.first.z)))) return true;
+    return false;
+}
+bool LightPropogationPass::equalToPairVec3(const std::pair<glm::vec3, glm::vec3> v1, const std::pair<glm::vec3, glm::vec3> v2)
+{
+    ivec3 v1First = ivec3(int(floor(v1.first.x) + 0.5f), int(floor(v1.first.y) + 0.5f), int(floor(v1.first.z) + 0.5f));
+    ivec3 v2First = ivec3(int(floor(v2.first.x) + 0.5f), int(floor(v2.first.y) + 0.5f), int(floor(v2.first.z) + 0.5f));
+    if (v1First.x == v2First.x && v1First.y == v2First.y && v1First.z == v2First.z) return true;
     return false;
 }
 
@@ -466,32 +542,42 @@ unsigned LightPropogationPass::getVAOFromSamplesIdxGridTex(int count)
         glBindTexture(GL_TEXTURE_1D, ResourceManager::get()->getTexture("samplesIdxInGridTexture"));
         unsigned* indexData = new unsigned[this->samplesN * 4];
         glGetTexImage(GL_TEXTURE_1D, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, indexData);
-        cout << "TEST DATA samplesIdxInGridTexture in getVAOFromSamplesIdxGridTex " << glGetError() << endl;
+        //cout << "TEST DATA samplesIdxInGridTexture in getVAOFromSamplesIdxGridTex " << glGetError() << endl;
         vector<u32vec3> indexArray;
+        int invalidBit = 0;
         for (int i = 0; i < this->samplesN; ++i) {
             if (indexData[i * 4 + 3]) {
                 indexArray.push_back({ indexData[i * 4 + 0] ,indexData[i * 4 + 1] ,indexData[i * 4 + 2] });
             }
             else {
-                cout << "debug-info: invalid bit in i = " << i << endl;
+                invalidBit++;
             }
         }
+        cout << "debug-info: invalid bits = " << invalidBit << endl;
         // sort vec3
         sort(indexArray.begin(), indexArray.end(), LightPropogationPass::compareU32vec3);
         // unique
         auto pRes = unique(indexArray.begin(), indexArray.end());
         indexArray.erase(pRes, indexArray.end());
         this->uniquedPoints = indexArray.size();
-        inputIndexData = new float[this->uniquedPoints * 5];
+        inputIndexData = new float[this->uniquedPoints * 7];
         cout << "inputIndexData size=" << this->uniquedPoints << endl;
         for (int i = 0; i < indexArray.size(); ++i) {
             u32vec3 v = indexArray[i];
-            inputIndexData[i * 5 + 0] = float(v.x);
-            inputIndexData[i * 5 + 1] = float(v.y);
-            inputIndexData[i * 5 + 2] = float(v.z);
-            inputIndexData[i * 5 + 3] = -1.f;
-            inputIndexData[i * 5 + 4] = float(i);
-            //cout << inputIndexData[i * 5 + 0] << ", " << inputIndexData[i * 5 + 1] << ", " << inputIndexData[i * 5 + 2] << ", " << inputIndexData[i * 5 + 3] << ", " << inputIndexData[i * 5 + 4] << endl;
+            inputIndexData[i * 7 + 0] = float(v.x);
+            inputIndexData[i * 7 + 1] = float(v.y);
+            inputIndexData[i * 7 + 2] = float(v.z);
+            inputIndexData[i * 7 + 3] = float(v.x);
+            inputIndexData[i * 7 + 4] = float(v.y);
+            inputIndexData[i * 7 + 5] = float(v.z);
+            inputIndexData[i * 7 + 6] = float(i);
+            //cout << inputIndexData[i * 7 + 0] << ", "
+            //    << inputIndexData[i * 7 + 1] << ", "
+            //    << inputIndexData[i * 7 + 2] << ", "
+            //    << inputIndexData[i * 7 + 3] << ", "
+            //    << inputIndexData[i * 7 + 4] << ", "
+            //    << inputIndexData[i * 7 + 5] << ", "
+            //    << inputIndexData[i * 7 + 6] << endl;
         }
     }
     else {
@@ -504,34 +590,54 @@ unsigned LightPropogationPass::getVAOFromSamplesIdxGridTex(int count)
             vec3(0, 0, -1),
         };
         int oppoSideTable[6] = { 3, 4, 5, 0, 1, 2 };
-        // 向5个面传播
-        vector<vec3> indexArray;
+        // 向6个面传播
+        vector<pair<vec3, vec3>> indexArray;
         for (int i = 0; i < this->uniquedPoints; ++i) {
-            vec3 originV = vec3(lastData[i * 5 + 0], lastData[i * 5 + 1], lastData[i * 5 + 2]);
-            int originDirection = lastData[i * 5 + 3];
+            vec3 fromV = vec3(lastData[i * 7 + 0], lastData[i * 7 + 1], lastData[i * 7 + 2]);
+            vec3 originV = vec3(lastData[i * 7 + 3], lastData[i * 7 + 4], lastData[i * 7 + 5]);
+            // 新的顶点向着远离originV的方向
+            const float EPSILON = 1e-6;
+            vec3 bias = fromV - originV;
             for (int direction = 0; direction < 6; direction++) {
-                if (direction == originDirection) continue;
-                vec3 newV = originV + deltaOfSideTable[direction];
-                indexArray.push_back(newV);
+                vec3 newV = fromV + deltaOfSideTable[direction];
+                vec3 newBias = newV - originV;
+                ivec3 iNewV = ivec3(int(floor(newV.x) + 0.5f), int(floor(newV.y) + 0.5f), int(floor(newV.z) + 0.5f));
+                ivec3 iBias = ivec3(int(floor(bias.x) + 0.5f), int(floor(bias.y) + 0.5f), int(floor(bias.z) + 0.5f));
+                ivec3 iNewBias = ivec3(int(floor(newBias.x) + 0.5f), int(floor(newBias.y) + 0.5f), int(floor(newBias.z) + 0.5f));
+                if (abs(iNewBias.x) < abs(iBias.x)) continue;
+                if (abs(iNewBias.y) < abs(iBias.y)) continue;
+                if (abs(iNewBias.z) < abs(iBias.z)) continue;
+                if (iNewV.x < 0 || iNewV.x >= this->iGridTextureSize) continue;
+                if (iNewV.y < 0 || iNewV.y >= this->iGridTextureSize) continue;
+                if (iNewV.z < 0 || iNewV.z >= this->iGridTextureSize) continue;
+                indexArray.push_back({ newV, originV });
             }
         }
         // sort vec3
-        sort(indexArray.begin(), indexArray.end(), LightPropogationPass::compareVec3);
+        sort(indexArray.begin(), indexArray.end(), LightPropogationPass::comparePairVec3);
         // unique
-        auto pRes = unique(indexArray.begin(), indexArray.end());
+        auto pRes = unique(indexArray.begin(), indexArray.end(), LightPropogationPass::equalToPairVec3);
         indexArray.erase(pRes, indexArray.end());
         this->uniquedPoints = indexArray.size();
-        inputIndexData = new float[this->uniquedPoints * 5];
+        inputIndexData = new float[this->uniquedPoints * 7];
         cout << "inputIndexData size=" << this->uniquedPoints << endl;
         for (int i = 0; i < indexArray.size(); ++i) {
-            vec3 v = indexArray[i];
-            inputIndexData[i * 5 + 0] = v.x;
-            inputIndexData[i * 5 + 1] = v.y;
-            inputIndexData[i * 5 + 2] = v.z;
-            // 向哪个方向传播(27个方向 3进制 000 -> 222)
-            inputIndexData[i * 5 + 3] = -1.f;
-            inputIndexData[i * 5 + 4] = float(i);
-            //cout << inputIndexData[i * 5 + 0] << ", " << inputIndexData[i * 5 + 1] << ", " << inputIndexData[i * 5 + 2] << ", " << inputIndexData[i * 5 + 3] << ", " << inputIndexData[i * 5 + 4] << endl;
+            vec3 v = indexArray[i].first;
+            vec3 origin = indexArray[i].second;
+            inputIndexData[i * 7 + 0] = v.x;
+            inputIndexData[i * 7 + 1] = v.y;
+            inputIndexData[i * 7 + 2] = v.z;
+            inputIndexData[i * 7 + 3] = origin.x;
+            inputIndexData[i * 7 + 4] = origin.y;
+            inputIndexData[i * 7 + 5] = origin.z;
+            inputIndexData[i * 7 + 6] = float(i);
+            //cout << inputIndexData[i * 7 + 0] << ", " 
+            //    << inputIndexData[i * 7 + 1] << ", " 
+            //    << inputIndexData[i * 7 + 2] << ", " 
+            //    << inputIndexData[i * 7 + 3] << ", " 
+            //    << inputIndexData[i * 7 + 4] << ", "
+            //    << inputIndexData[i * 7 + 5] << ", "
+            //    << inputIndexData[i * 7 + 6] << endl;
         }
     }
     if(lastData != nullptr)
@@ -542,18 +648,18 @@ unsigned LightPropogationPass::getVAOFromSamplesIdxGridTex(int count)
     glGenBuffers(1, &idxVBO);
     glBindVertexArray(idxVAO);
     glBindBuffer(GL_ARRAY_BUFFER, idxVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 5 * this->uniquedPoints, inputIndexData, GL_STATIC_DRAW);
-    cout << "TEST idxVBO in getVAOFromSamplesIdxGridTex " << glGetError()<<", when count=" << count << endl;
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 7 * this->uniquedPoints, inputIndexData, GL_STATIC_DRAW);
+    //cout << "TEST idxVBO in getVAOFromSamplesIdxGridTex " << glGetError()<<", when count=" << count << endl;
     // sample tex
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     // sample direction
-    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
     // sample index
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(4 * sizeof(float)));
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
-    cout << "TEST idxVAO in getVAOFromSamplesIdxGridTex " << glGetError() << ", when count=" << count << endl;
+    //cout << "TEST idxVAO in getVAOFromSamplesIdxGridTex " << glGetError() << ", when count=" << count << endl;
     glBindVertexArray(0);
     return idxVAO;
 }
@@ -582,7 +688,7 @@ void LightPropogationPass::Render()
     glBindImageTexture(4, gridTextureB0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
     glBindImageTexture(5, gridTextureB1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
 
-    cout << "glBindImageTexture " << glGetError() << endl;
+    //cout << "glBindImageTexture " << glGetError() << endl;
     for (int count = 0; count < this->propogationCount; count++) {
         unsigned VAO = this->getVAOFromSamplesIdxGridTex(count);
         /* testTextureDebug
@@ -609,10 +715,10 @@ void LightPropogationPass::Render()
         // bind VAO
         // get grid index VAO from
         glBindVertexArray(VAO);
-        cout << "TEST LightPropogationPass glBindVertexArray " << glGetError() << ", " << VAO << endl;
+        //cout << "TEST LightPropogationPass glBindVertexArray " << glGetError() << ", " << VAO << endl;
         // draw
         glDrawArrays(GL_POINTS, 0, this->uniquedPoints);
-        cout << "TEST LightPropogationPass glDrawArrays " << glGetError() << ", " << this->uniquedPoints << endl;
+        //cout << "TEST LightPropogationPass glDrawArrays " << glGetError() << ", " << this->uniquedPoints << endl;
 
         glDeleteVertexArrays(1, &VAO);
         /* testTextureDebug
@@ -689,7 +795,7 @@ void GBufferPass::initTexture()
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, screenWorldPosMap, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, screenDiffuseMap, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, screenNormalMap, 0);
-    cout << "GBufferPass glFramebufferTexture " << glGetError() << endl;
+    //cout << "GBufferPass glFramebufferTexture " << glGetError() << endl;
     GLenum bufs[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
     glDrawBuffers(3, bufs);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -719,7 +825,7 @@ void GBufferPass::Render()
     this->shader->setMat4("view", camera->GetViewMatrix());
     this->shader->setMat4("projection", glm::perspective(glm::radians(camera->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f));
     modelPair.first->Draw(*this->shader);
-    cout << "GBufferPass drawModel " << glGetError() << endl;
+    //cout << "GBufferPass drawModel " << glGetError() << endl;
 
     // !important
     glBindVertexArray(0);
@@ -868,7 +974,7 @@ void Output2DPass::initScene()
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-    cout << "Output2DPass initScene " << glGetError() << endl;
+    //cout << "Output2DPass initScene " << glGetError() << endl;
     ResourceManager::get()->setVAO("screenVAO", screenVAO, mat4(1.f));
     glBindVertexArray(0);
 }
@@ -885,7 +991,7 @@ void Output2DPass::Render()
     unsigned screenTexture = ResourceManager::get()->getTexture(this->textureName);
     glBindTexture(GL_TEXTURE_2D, screenTexture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    cout << "Output2DPass glDrawArrays " << glGetError() << endl;
+    //cout << "Output2DPass glDrawArrays " << glGetError() << endl;
     glBindVertexArray(0);
 }
 
@@ -948,7 +1054,7 @@ void LPVOutputPass::initScene()
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-    cout << "LPVOutputPass initScene " << glGetError() << endl;
+    //cout << "LPVOutputPass initScene " << glGetError() << endl;
     ResourceManager::get()->setVAO("screenVAO", screenVAO, mat4(1.f));
     glBindVertexArray(0);
 }
@@ -995,6 +1101,10 @@ void LPVOutputPass::Render()
     pair<unsigned, mat4> VAOPair = pRM->getVAO("screenVAO");
     glBindVertexArray(VAOPair.first);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    cout << "LPVOutputPass glDrawArrays " << glGetError() << endl;
+    //cout << "LPVOutputPass glDrawArrays " << glGetError() << endl;
     glBindVertexArray(0);
+
+    VAOPair = pRM->getVAO("sampleVAO");
+    glDeleteVertexArrays(1, &VAOPair.first);
+    pRM->deleteVAO("sampleVAO");
 }

@@ -13,7 +13,8 @@ public:
 		initVAO = -1;
 
 		GetShadowSamplePass* getShadowSamplePass = new GetShadowSamplePass(0);
-		LightInjectionPass* lightInjectionPass = new LightInjectionPass(1, 100, 100);
+		//LightInjectionPass* lightInjectionPass = new LightInjectionPass(1, 10000, 10);
+		LightInjectionPass* lightInjectionPass = new LightInjectionPass(1, 900, 50);
 		LightPropogationPass* lightPropogationPass = new LightPropogationPass(2, lightInjectionPass->getSamplesN(), lightInjectionPass->getIGridTextureSize());
 		GBufferPass* gBufferPass = new GBufferPass(3);
 		LPVOutputPass* lpvOutputPass = new LPVOutputPass(4, lightInjectionPass->getIGridTextureSize());

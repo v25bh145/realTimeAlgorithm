@@ -106,6 +106,7 @@ void main() {
         discard;
     // get 3D index of VPL
     vec3 worldPosToMinBox = fs_in.worldPos - gridMinBox;
+    worldPosToMinBox = max(worldPosToMinBox, vec3(0.f, 0.f, 0.f));
     vec3 fGridIndex = {floor(worldPosToMinBox.x / gridSize.x), floor(worldPosToMinBox.y / gridSize.y), floor(worldPosToMinBox.z / gridSize.z)};
     ivec3 iGridIndex = {int(fGridIndex.x), int(fGridIndex.y), int(fGridIndex.z)};
     // calculate center of grid
