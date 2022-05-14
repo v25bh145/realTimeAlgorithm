@@ -9,7 +9,7 @@ int main() {
 	GLFWwindow* window = initWindow();
 
     RenderAlgorithm ra = RenderAlgorithm();
-
+    
     ra.globalSettings();
 
     ra.prepareRendering();

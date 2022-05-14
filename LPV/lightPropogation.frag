@@ -15,7 +15,7 @@ layout (rgba32f, binding = 7) uniform image1D testTextureFloat;
 
 uniform float propogationGate;
 
-uniform int uGridTextureSize;
+uniform int iGridTextureSize;
 uniform vec3 fGridSize;
 uniform vec3 gridMinBox;
 
@@ -145,9 +145,9 @@ void loadGrid(ivec3 grid) {
     loadGridOutputSH[3] = vec3(vR1.g, vG1.g, vB1.g);
 }
 bool gridOutOfRange(ivec3 nowGrid) {
-    if(0 <= nowGrid.x && nowGrid.x < uGridTextureSize
-    && 0 <= nowGrid.y && nowGrid.y < uGridTextureSize
-    && 0 <= nowGrid.z && nowGrid.z < uGridTextureSize)
+    if(0 <= nowGrid.x && nowGrid.x < iGridTextureSize
+    && 0 <= nowGrid.y && nowGrid.y < iGridTextureSize
+    && 0 <= nowGrid.z && nowGrid.z < iGridTextureSize)
         return false;
     return true;
 }

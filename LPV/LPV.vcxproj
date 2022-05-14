@@ -172,6 +172,8 @@
     <ClCompile Include="texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="GBuffer.frag" />
+    <None Include="GBuffer.vert" />
     <None Include="getShadowSample.frag" />
     <None Include="getShadowSample.geom" />
     <None Include="getShadowSample.vert" />

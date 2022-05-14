@@ -45,19 +45,19 @@ private:
 	// samplesN on theta & phi(cubemap)
 	unsigned samplesN;
 	// 一共多少格
-	unsigned uGridTextureSize;
+	int iGridTextureSize;
 	float* getSamplesRandom(unsigned samplesN);
 	void genSampleVAO();
 public:
 	LightInjectionPass(int indexInPass) : RenderPass(indexInPass) {
 		//this->samplesN = 50;
-		//this->uGridTextureSize = 50;
+		//this->iGridTextureSize = 50;
 		this->samplesN = 25;
-		this->uGridTextureSize = 10;
+		this->iGridTextureSize = 100;
 	};
-	LightInjectionPass(int indexInPass, int samplesN, int uGridTextureSize) : RenderPass(indexInPass) {
+	LightInjectionPass(int indexInPass, int samplesN, int iGridTextureSize) : RenderPass(indexInPass) {
 		this->samplesN = samplesN;
-		this->uGridTextureSize = uGridTextureSize;
+		this->iGridTextureSize = iGridTextureSize;
 	};
 	virtual ~LightInjectionPass() {}
 	/* =================
@@ -73,7 +73,7 @@ public:
 	void Render() override;
 	// get
 	unsigned getSamplesN();
-	unsigned getUGridTextureSize();
+	unsigned getIGridTextureSize();
 };
 /* =====lightPropogation Pass=====
 * 第三个pass
@@ -83,7 +83,7 @@ public:
 */
 class LightPropogationPass : public RenderPass {
 private:
-	// 传播比例，传播次数=uGridTextureSize*propogationRate
+	// 传播比例，传播次数=iGridTextureSize*propogationRate
 	unsigned propogationCount;
 	// 衰减阈值
 	float propogationGate;
@@ -92,19 +92,19 @@ private:
 	// 由上一pass继承
 	unsigned samplesN;
 	// 一共多少格
-	unsigned uGridTextureSize;
+	int iGridTextureSize;
 
 	unsigned getVAOFromSamplesIdxGridTex(int count);
 	static bool compareU32vec3(const glm::u32vec3 v1, const glm::u32vec3 v2);
 	static bool compareVec3(const glm::vec3 v1, const glm::vec3 v2);
 public:
-	LightPropogationPass(int indexInPass, unsigned samplesN, unsigned uGridTextureSize, float propogationRate = 0.3f, float propogationGate = 0.005f) :
-		RenderPass(indexInPass), samplesN(samplesN), uGridTextureSize(uGridTextureSize), propogationGate(propogationGate) {
+	LightPropogationPass(int indexInPass, unsigned samplesN, int iGridTextureSize, float propogationRate = 0.3f, float propogationGate = 0.005f) :
+		RenderPass(indexInPass), samplesN(samplesN), iGridTextureSize(iGridTextureSize), propogationGate(propogationGate) {
 		if (propogationRate < 0.f) {
 			cout << "ERROR: propogationRate < 0.f in LightPropogationPass" << endl;
 		}
 		this->uniquedPoints = 0;
-		this->propogationCount = unsigned(floor(float(uGridTextureSize) * propogationRate + 0.5f));
+		this->propogationCount = unsigned(floor(float(iGridTextureSize) * propogationRate + 0.5f));
 		// 6 * (5^12)
 		this->propogationCount = this->propogationCount <= 5 ? this->propogationCount : 5;
 	};
@@ -124,17 +124,43 @@ public:
 /* =====GBufferPass Pass=====
 * opengl-settings: 开启深度测试
 * opengl-input: 所有点、照相机、视角变换
-* opengl-output: 2D 屏幕空间贴图 漫反射(物体表面的，不是flux) 顶点坐标 法线
+* opengl-output: 2D 屏幕空间贴图 漫反射(物体表面的，不是flux) 坐标 法线
 */
 class GBufferPass : public RenderPass {
 private:
-	// 一共多少格
-	unsigned uGridTextureSize;
 public:
-	GBufferPass(int indexInPass, unsigned uGridTextureSize)
-		:RenderPass(indexInPass), uGridTextureSize(uGridTextureSize) {
+	GBufferPass(int indexInPass)
+		:RenderPass(indexInPass) {
 	};
 	virtual ~GBufferPass() {}
+	/* =================
+	* before render loop
+	*/
+	void initGlobalSettings() override;
+	void initShader() override;
+	void initTexture() override;
+	void initScene() override;
+	/* =================
+	* in render loop
+	*/
+	void Render() override;
+};
+/* =====LPVOutputClass Pass=====
+* opengl-settings: 关闭深度测试
+* opengl-input: 屏幕
+* opengl-texture: 2D-屏幕空间贴图: 漫反射(物体表面的，不是flux) 坐标 法线
+* opengl-texture: 3D-grid texture: 几个球谐系数
+* opengl-output: 颜色
+*/
+class LPVOutputPass : public RenderPass {
+private:
+public:
+	// 一共多少格
+	int iGridTextureSize;
+	LPVOutputPass(int indexInPass, int iGridTextureSize)
+		:RenderPass(indexInPass),iGridTextureSize(iGridTextureSize) {
+	};
+	virtual ~LPVOutputPass() {}
 	/* =================
 	* before render loop
 	*/
@@ -173,9 +199,9 @@ public:
 	void Render() override;
 };
 /* =====output / test Pass=====
-* opengl-settings: 开启深度测试
-* opengl-input: 2D材质
-* opengl-output: 屏幕
+* opengl-settings: 关闭深度测试
+* opengl-input: 屏幕
+* opengl-output: 颜色
 */
 class Output2DPass : public RenderPass {
 private:
