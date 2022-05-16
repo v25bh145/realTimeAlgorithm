@@ -178,6 +178,7 @@
     <None Include="getShadowSample.geom" />
     <None Include="getShadowSample.vert" />
     <None Include="lightInjection.frag" />
+    <None Include="lightInjection.geom" />
     <None Include="lightInjection.vert" />
     <None Include="lightPropogation.frag" />
     <None Include="lightPropogation.vert" />

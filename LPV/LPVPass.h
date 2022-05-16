@@ -42,25 +42,16 @@ public:
 */
 class LightInjectionPass : public RenderPass {
 private:
-	// samplesN on theta & phi(cubemap)
-	unsigned samplesN;
 	// 一共多少格
 	int iGridTextureSize;
-	float* getSamplesRandomInMesh(unsigned samplesN);
-	float* getSamplesRandomSphereUniform(unsigned samplesN);
-	// will change samplesN in object
-	float* getSamplesSphereUniform(unsigned samplesN);
-	float* getSamplesHalfMeshHalfRandomSphereUniform(unsigned samplesN, float propotionOfMesh);
-	void genSampleVAO();
+	const unsigned INJECTION_WIDTH = 1024;
+	const unsigned INJECTION_HEIGHT = 1024;
 public:
 	LightInjectionPass(int indexInPass) : RenderPass(indexInPass) {
-		//this->samplesN = 50;
 		//this->iGridTextureSize = 50;
-		this->samplesN = 25;
 		this->iGridTextureSize = 100;
 	};
-	LightInjectionPass(int indexInPass, int samplesN, int iGridTextureSize) : RenderPass(indexInPass) {
-		this->samplesN = samplesN;
+	LightInjectionPass(int indexInPass, int iGridTextureSize) : RenderPass(indexInPass) {
 		this->iGridTextureSize = iGridTextureSize;
 	};
 	virtual ~LightInjectionPass() {}
@@ -76,7 +67,6 @@ public:
 	*/
 	void Render() override;
 	// get
-	unsigned getSamplesN();
 	unsigned getIGridTextureSize();
 };
 /* =====lightPropogation Pass=====

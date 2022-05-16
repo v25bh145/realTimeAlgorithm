@@ -33,56 +33,10 @@ uniform vec3 viewPos;
 
 out vec4 FragColor;
 
-float P(float x, int l, int m) {
-    if (m < 0 || l < 0) { 
-        return 0.f; 
-    }
-    // P^m_m
-    float pmm = 1.f;
-    if (m > 0) {
-        // somx2 = (1-x^2)^{1/2}
-        float somx2 = sqrt((1.f + x) * (1.f - x));
-        // fact: 双阶乘函数，且2m-1为奇数，可解n!!=n(n-2)……×3×1
-        float fact = 1.f;
-        for (int i = 0; i < m; ++i) {
-            pmm *= -1.f * fact * somx2;
-            fact += 2.f;
-        }
-    }
-    // (1)式
-    if (m == l) return pmm;
-    // P^m_{m+1}
-    float pmm1 = x * (2.f * float(m) + 1.f) * pmm;
-    // (2)式
-    if (m + 1 == l) return pmm1;
-    // 将p^m_m和P^m_{m+1}底下的m与m+1 逐层向上推导，直到得到p^m_{l-2}和P^m_{l-1}
-    float pml = 0.f;
-    for (int ll = m + 2; ll <= l; ++ll) {
-        pml = x * (2.f * float(ll) - 1.f) * pmm1 - (float(ll) + float(m) - 1.f) * pmm;
-        pml /= float(ll) - float(m);
-        pmm = pmm1;
-        pmm1 = pml;
-    }
-    return pml;
-}
-float K(int l, int m) {
-    const float PI = acos(-1);
-    m = abs(m);
-    int fact1 = 1, fact2 = 1;
-    for (int i = 1; i <= l + m; ++i) fact1 *= i;
-    for (int i = 1; i <= l - m; ++i) fact2 *= i;
-    float tmp = (2.f * float(l) + 1.f) * float(fact2) / (4.f * PI * float(fact1));
-    return sqrt(tmp);
-}
-float SH(int l, int m, float theta, float phi) {
-    const float PI = acos(-1.f);
-    if (m < -l || m > l || l < 0 || theta < 0.f || theta > PI || phi < 0.f || phi > 2 * PI) { 
-        return 0.f; 
-    }
-    const float sqrt2 = sqrt(2.f);
-    if (m == 0) return K(l, 0) * P(cos(theta), l, 0);
-    else if (m > 0) return sqrt2 * K(l, m) * cos(m * phi) * P(cos(theta), l, m);
-    else return sqrt2 * K(l, m) * sin(-m * phi) * P(cos(theta), l, -m);
+#define SH_C0 0.282094792f // 1 / 2sqrt(pi)
+#define SH_C1 0.488602512f // sqrt(3/pi) / 2
+vec4 evalSH_direct(vec3 dir) {	
+	return vec4(SH_C0, -SH_C1 * dir.y, SH_C1 * dir.z, -SH_C1 * dir.x);
 }
 // [-32767, +32767]
 const float PI = acos(-1.f);
@@ -171,12 +125,8 @@ void main() {
     gridSH[2] = vec3(vR1.r, vG1.r, vB1.r);
     gridSH[3] = vec3(vR1.g, vG1.g, vB1.g);
 
-    vec3 fGridCenterIndex = fGridIndex + vec3(0.5f, 0.5f, 0.5f);
-    vec3 fGridCenter = vec3(
-        gridMinBox.x + fGridCenterIndex.x * fGridSize.x,
-        gridMinBox.y + fGridCenterIndex.y * fGridSize.y,
-        gridMinBox.z + fGridCenterIndex.z * fGridSize.z
-    );
+    //vec3 fGridCenterIndex = fGridIndex + vec3(0.5f, 0.5f, 0.5f);
+    vec3 fGridCenter = worldPosToMinBox + 0.5f * fGridSize;
 
     vec3 OX = normalize(worldPos - fGridCenter);
     float thetaOX = acos(OX.z);
@@ -185,13 +135,22 @@ void main() {
         phiOX += 2.f * PI;
     }
     vec3 indirect = vec3(0.f, 0.f, 0.f);
+
+    vec4 VPL_SH = evalSH_direct(OX);
+    indirect += gridSH[0] * VPL_SH.x;
+    indirect += gridSH[1] * VPL_SH.y;
+    indirect += gridSH[2] * VPL_SH.z;
+    indirect += gridSH[3] * VPL_SH.w;
+    /*
     for (int l = 0; l < 2; ++l) {
         for (int m = -l; m <= l; ++m) {
             int index = l * (l + 1) + m;
             indirect += SH(l, m, thetaOX, phiOX) * gridSH[index];
         }
     }
-    indirect = vec3(max(0.f, indirect.x), max(0.f, indirect.y), max(0.f, indirect.z));
+    */
+    indirect = abs(indirect);
+    //indirect = vec3(max(0.f, indirect.x), max(0.f, indirect.y), max(0.f, indirect.z));
 
     vec3 color = direct + indirect;
 

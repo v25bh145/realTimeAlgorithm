@@ -142,5 +142,8 @@
     <None Include="GBuffer.frag">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="lightInjection.geom">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>
