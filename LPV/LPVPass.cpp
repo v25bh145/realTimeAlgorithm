@@ -114,8 +114,8 @@ void GetShadowSamplePass::initScene()
     * geom & transform & shader set
     */
     // scene geom
-    //Model* nanosuit = new Model("../models/Room/Room #1.obj");
-    Model* nanosuit = new Model("../models/nanosuit/nanosuit.obj");
+    Model* nanosuit = new Model("../models/Room/Room #1.obj");
+    //Model* nanosuit = new Model("../models/nanosuit/nanosuit.obj");
     pResourceManager->setModel("renderModel", nanosuit, mat4(1.f));
     pResourceManager->setGlobalVec3("boundingVolumeMin", nanosuit->boudingVolume.first);
     pResourceManager->setGlobalVec3("boundingVolumeMax", nanosuit->boudingVolume.second);
@@ -140,6 +140,9 @@ void GetShadowSamplePass::Render()
     glBindVertexArray(0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
+// fix: 不再进行VPL采样，对整个cubemap纹理进行一次渲染，将其中的fragment shader用于注入
+// fix: propogation进行大改，传输所有格子，每个格子向所有方向进行若干次传播(抛弃值为0的点)
 
 // @return: float数组，长度3*samplesN，数据大小[0, 1]
 float* LightInjectionPass::getSamplesRandomInMesh(unsigned samplesN)
