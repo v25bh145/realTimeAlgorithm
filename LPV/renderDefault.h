@@ -17,8 +17,8 @@
 #include "resourceManager.h"
 #include "randomGenerator.h"
 
-#define SCR_WIDTH 800
-#define SCR_HEIGHT 600
+#define SCR_WIDTH 1600
+#define SCR_HEIGHT 900
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);

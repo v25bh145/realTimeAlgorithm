@@ -8,23 +8,21 @@ layout (r32ui, binding = 3) uniform uimage3D girdTextureG1;
 // girdTextureB: c1 ~ c4
 layout (r32ui, binding = 4) uniform uimage3D girdTextureB0;
 layout (r32ui, binding = 5) uniform uimage3D girdTextureB1;
-/* testTextureDebug 
-layout (rgba32ui, binding = 6) uniform uimage1D testTextureUint;
-layout (rgba32f, binding = 7) uniform image1D testTextureFloat;
-*/
-
-uniform float propogationGate;
+// testTextureDebug 
+//layout (rgba32ui, binding = 6) uniform uimage1D testTextureUint;
+//layout (rgba32f, binding = 7) uniform image1D testTextureFloat;
 
 uniform int iGridTextureSize;
 uniform vec3 fGridSize;
 uniform vec3 gridMinBox;
 
-in VS_OUT {
-    flat ivec3 gridIndex;
-	flat ivec3 originIndex;
-    flat int sampleIndex;
-} fs_in;
+in flat int iGridIndex;
 
+#define SH_C0 0.282094792f // 1 / 2sqrt(pi)
+#define SH_C1 0.488602512f // sqrt(3/pi) / 2
+vec4 evalSH_direct(vec3 dir) {	
+	return vec4(SH_C0, -SH_C1 * dir.y, SH_C1 * dir.z, -SH_C1 * dir.x);
+}
 // [-32767, +32767]
 const float PI = acos(-1.f);
 const float compressFactor = 5000.f;
@@ -115,8 +113,7 @@ vec3 getGridCenter(ivec3 grid) {
 // 0 front 1 right 2 up 3 back 4 left 5 down
 
 // 从nowGrid开始向其他5/6面的格子传输
-const float EPSILON = 0.000001f;
-void propogateOnce(ivec3 nowGrid, ivec3 originGrid) {
+void propogateOnce(ivec3 nowGrid) {
     loadGrid(nowGrid);
     vec3 girdNow_SH[4] = loadGridOutputSH;
     vec3 nowGridCenter = getGridCenter(nowGrid); // O point
@@ -141,11 +138,13 @@ void propogateOnce(ivec3 nowGrid, ivec3 originGrid) {
     // 向5个格子传输
     for(int i = 0; i < 6; i++) {
         ivec3 nextGrid = nowGrid + deltaOfSideTable[i];
+        /*
         ivec3 originToNow = nowGrid - originGrid;
         ivec3 originToNext = nextGrid - originGrid;
         if(abs(originToNext.x) < abs(originToNow.x)) continue;
         if(abs(originToNext.y) < abs(originToNow.y)) continue;
         if(abs(originToNext.z) < abs(originToNow.z)) continue;
+        */
         if(gridOutOfRange(nextGrid)) continue;
 
         vec3 nextGridCenter = getGridCenter(nextGrid); // A point
@@ -173,12 +172,12 @@ void propogateOnce(ivec3 nowGrid, ivec3 originGrid) {
             }
             vec3 XO = -OX;
 
-            for (int l = 0; l < 2; ++l) {
-                for (int m = -l; m <= l; ++m) {
-                    int index = l * (l + 1) + m;
-                    LiOX += SH(l, m, thetaOX, phiOX) * girdNow_SH[index];
-                }
-            }
+            vec4 OX_SH = evalSH_direct(OX);
+            LiOX += OX_SH.x * girdNow_SH[0];
+            LiOX += OX_SH.y * girdNow_SH[1];
+            LiOX += OX_SH.z * girdNow_SH[2];
+            LiOX += OX_SH.w * girdNow_SH[3];
+
             vec3 Nx = normalize(nextGridCenter - edgeCenter);
             float cosAngle = abs(dot(Nx, XO));
             vec3 LiXA = LiOX * cosAngle / PI;
@@ -196,12 +195,11 @@ void propogateOnce(ivec3 nowGrid, ivec3 originGrid) {
                 phiAX += 2.f * PI;
             }
             // calculate theta & phi
-            for (int l = 0; l < 2; ++l) {
-                for (int m = -l; m <= l; ++m) {
-                    int index = l * (l + 1) + m;
-                    girdNext_SH[index] += LEdgeToA * SH(l, m, thetaAX, phiAX);
-                }
-            }
+            vec4 SH_AX = evalSH_direct(AX);
+            girdNext_SH[0] = SH_AX.x * LEdgeToA;
+            girdNext_SH[1] = SH_AX.y * LEdgeToA;
+            girdNext_SH[2] = SH_AX.z * LEdgeToA;
+            girdNext_SH[3] = SH_AX.w * LEdgeToA;
         }
         storeGridInputSH = girdNext_SH;
         storeGrid(nextGrid);
@@ -210,9 +208,15 @@ void propogateOnce(ivec3 nowGrid, ivec3 originGrid) {
 }
 
 void main() {
-    propogateOnce(fs_in.gridIndex, fs_in.originIndex);
-    /* testTextureDebug 
-    imageStore(testTextureUint, fs_in.sampleIndex, uvec4(1, 2, 3, 4));
-    imageStore(testTextureFloat, fs_in.sampleIndex, vec4(1.f, 1.f, 1.f, 1.f));
-    */
+    int iGridTextureSize2 = iGridTextureSize * iGridTextureSize;
+    int gridXIndex = iGridIndex / iGridTextureSize2;
+    int gridIndexYZ = iGridIndex - gridXIndex * iGridTextureSize2;
+    int gridYIndex = gridIndexYZ / iGridTextureSize;
+    int gridIndexZ = gridIndexYZ - gridYIndex * iGridTextureSize;
+    int gridZIndex = gridIndexZ;
+    ivec3 gridIndexVec = ivec3(gridXIndex, gridYIndex, gridZIndex);
+    propogateOnce(gridIndexVec);
+    // testTextureDebug 
+    //imageStore(testTextureUint, iGridIndex, uvec4(gridIndexVec, 1));
+    //imageStore(testTextureFloat, iGridIndex, vec4(float(iGridIndex), 1.f, 1.f, 1.f));
 }

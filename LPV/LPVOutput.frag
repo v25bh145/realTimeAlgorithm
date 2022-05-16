@@ -64,7 +64,39 @@ vec2 atomToVec2(uint atom)
     res.g = deCompressUint16ToFloat((atom >> 16) & 0xFFFF);
     return res;
 }
+vec3 calculateIndirect(ivec3 iGridIndex, vec3 worldPos) {
+	//vec3 worldPosToMinBox = worldPos - gridMinBox;
+    //worldPosToMinBox = max(worldPosToMinBox, vec3(0.f, 0.f, 0.f));
+	//vec3 fGridIndex = {floor(worldPosToMinBox.x / fGridSize.x), floor(worldPosToMinBox.y / fGridSize.y), floor(worldPosToMinBox.z / fGridSize.z)};
+    //ivec3 iGridIndex = {int(fGridIndex.x), int(fGridIndex.y), int(fGridIndex.z)};
+	vec3 fGridIndex = vec3(iGridIndex);
+    vec2 vR0 = atomToVec2(imageLoad(girdTextureR0, iGridIndex).x);
+    vec2 vR1 = atomToVec2(imageLoad(girdTextureR1, iGridIndex).x);
+    vec2 vG0 = atomToVec2(imageLoad(girdTextureG0, iGridIndex).x);
+    vec2 vG1 = atomToVec2(imageLoad(girdTextureG1, iGridIndex).x);
+    vec2 vB0 = atomToVec2(imageLoad(girdTextureB0, iGridIndex).x);
+    vec2 vB1 = atomToVec2(imageLoad(girdTextureB1, iGridIndex).x);
+    vec3 gridSH[4];
+    gridSH[0] = vec3(vR0.r, vG0.r, vB0.r);
+    gridSH[1] = vec3(vR0.g, vG0.g, vB0.g);
+    gridSH[2] = vec3(vR1.r, vG1.r, vB1.r);
+    gridSH[3] = vec3(vR1.g, vG1.g, vB1.g);
 
+    vec3 fGridCenter = vec3(fGridIndex.x * fGridSize.x + gridMinBox.x, fGridIndex.y * fGridSize.y + gridMinBox.y, fGridIndex.z * fGridSize.z + gridMinBox.z) + 0.5f * fGridSize;
+
+    vec3 OX = normalize(worldPos - fGridCenter);
+    vec3 indirect = vec3(0.f, 0.f, 0.f);
+
+    vec4 VPL_SH = evalSH_direct(OX);
+    indirect += gridSH[0] * VPL_SH.x;
+    indirect += gridSH[1] * VPL_SH.y;
+    indirect += gridSH[2] * VPL_SH.z;
+    indirect += gridSH[3] * VPL_SH.w;
+
+    indirect = abs(indirect);
+    indirect = vec3(min(1.f, indirect.x), min(1.f, indirect.y), min(1.f, indirect.z));
+    return indirect;
+}
 void main() {
 	vec3 worldPos = texture(screenWorldPosMap, fTexCoords).xyz;
 	vec3 kd = texture(screenDiffuseMap, fTexCoords).xyz;
@@ -109,53 +141,27 @@ void main() {
 	vec3 direct = ((diffuse + specular) * (1.f - shadowValue) + light.ambient) * kd;
 
 	// indirect
-    vec3 gridSH[4];
 	vec3 worldPosToMinBox = worldPos - gridMinBox;
     worldPosToMinBox = max(worldPosToMinBox, vec3(0.f, 0.f, 0.f));
 	vec3 fGridIndex = {floor(worldPosToMinBox.x / fGridSize.x), floor(worldPosToMinBox.y / fGridSize.y), floor(worldPosToMinBox.z / fGridSize.z)};
     ivec3 iGridIndex = {int(fGridIndex.x), int(fGridIndex.y), int(fGridIndex.z)};
-    vec2 vR0 = atomToVec2(imageLoad(girdTextureR0, iGridIndex).x);
-    vec2 vR1 = atomToVec2(imageLoad(girdTextureR1, iGridIndex).x);
-    vec2 vG0 = atomToVec2(imageLoad(girdTextureG0, iGridIndex).x);
-    vec2 vG1 = atomToVec2(imageLoad(girdTextureG1, iGridIndex).x);
-    vec2 vB0 = atomToVec2(imageLoad(girdTextureB0, iGridIndex).x);
-    vec2 vB1 = atomToVec2(imageLoad(girdTextureB1, iGridIndex).x);
-    gridSH[0] = vec3(vR0.r, vG0.r, vB0.r);
-    gridSH[1] = vec3(vR0.g, vG0.g, vB0.g);
-    gridSH[2] = vec3(vR1.r, vG1.r, vB1.r);
-    gridSH[3] = vec3(vR1.g, vG1.g, vB1.g);
-
-    //vec3 fGridCenterIndex = fGridIndex + vec3(0.5f, 0.5f, 0.5f);
-    vec3 fGridCenter = worldPosToMinBox + 0.5f * fGridSize;
-
-    vec3 OX = normalize(worldPos - fGridCenter);
-    float thetaOX = acos(OX.z);
-    float phiOX = atan(OX.y, OX.x);
-    if(phiOX < 0.f) {
-        phiOX += 2.f * PI;
-    }
+    
     vec3 indirect = vec3(0.f, 0.f, 0.f);
-
-    vec4 VPL_SH = evalSH_direct(OX);
-    indirect += gridSH[0] * VPL_SH.x;
-    indirect += gridSH[1] * VPL_SH.y;
-    indirect += gridSH[2] * VPL_SH.z;
-    indirect += gridSH[3] * VPL_SH.w;
-    /*
-    for (int l = 0; l < 2; ++l) {
-        for (int m = -l; m <= l; ++m) {
-            int index = l * (l + 1) + m;
-            indirect += SH(l, m, thetaOX, phiOX) * gridSH[index];
+    for(int i = -1; i <= 1; i++) {
+        for(int j = -1; j <= 1; j++) {
+            for(int k = -1; k <= 1; k++) {
+                indirect += calculateIndirect(ivec3(iGridIndex.x + i, iGridIndex.y + j, iGridIndex.z + k), worldPos);
+            }
         }
     }
-    */
-    indirect = abs(indirect);
-    //indirect = vec3(max(0.f, indirect.x), max(0.f, indirect.y), max(0.f, indirect.z));
+    indirect = indirect / 9.f;
+    
+    //vec3 indirect = calculateIndirect(iGridIndex, worldPos);
 
     vec3 color = direct + indirect;
 
-	FragColor = vec4(indirect, 1.f);
+	FragColor = vec4(color, 1.f);
 
-    //const float gamma = 2.2;
-    //FragColor.rgb = pow(FragColor.rgb, vec3(1.f / gamma));
+    const float gamma = 2.2;
+    FragColor.rgb = pow(FragColor.rgb, vec3(1.f / gamma));
 }

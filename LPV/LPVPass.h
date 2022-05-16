@@ -44,8 +44,8 @@ class LightInjectionPass : public RenderPass {
 private:
 	// 一共多少格
 	int iGridTextureSize;
-	const unsigned INJECTION_WIDTH = 1024;
-	const unsigned INJECTION_HEIGHT = 1024;
+	const unsigned INJECTION_WIDTH = 2048;
+	const unsigned INJECTION_HEIGHT = 2048;
 public:
 	LightInjectionPass(int indexInPass) : RenderPass(indexInPass) {
 		//this->iGridTextureSize = 50;
@@ -79,30 +79,18 @@ class LightPropogationPass : public RenderPass {
 private:
 	// 传播比例，传播次数=iGridTextureSize*propogationRate
 	unsigned propogationCount;
-	// 衰减阈值
-	float propogationGate;
-	// 在渲染时动态计算
-	unsigned uniquedPoints;
-	// 由上一pass继承
-	unsigned samplesN;
 	// 一共多少格
 	int iGridTextureSize;
 
-	unsigned getVAOFromSamplesIdxGridTex(int count);
-	static bool compareU32vec3(const glm::u32vec3 v1, const glm::u32vec3 v2);
-	static bool comparePairVec3(const std::pair<glm::vec3, glm::vec3> v1, const std::pair<glm::vec3, glm::vec3> v2);
-	static bool equalToPairVec3(const std::pair<glm::vec3, glm::vec3> v1, const std::pair<glm::vec3, glm::vec3> v2);
 public:
-	LightPropogationPass(int indexInPass, unsigned samplesN, int iGridTextureSize, float propogationRate = 0.3f, float propogationGate = 0.005f) :
-		RenderPass(indexInPass), samplesN(samplesN), iGridTextureSize(iGridTextureSize), propogationGate(propogationGate) {
+	LightPropogationPass(int indexInPass, int iGridTextureSize, float propogationRate = 0.1f) :
+		RenderPass(indexInPass), iGridTextureSize(iGridTextureSize) {
 		if (propogationRate < 0.f) {
 			cout << "ERROR: propogationRate < 0.f in LightPropogationPass" << endl;
 		}
-		this->uniquedPoints = 0;
 		this->propogationCount = unsigned(floor(float(iGridTextureSize) * propogationRate + 0.5f));
 		// 6 * (5^12)
-		this->propogationCount = this->propogationCount <= 5 ? this->propogationCount : 5;
-		this->propogationCount = 5;
+		this->propogationCount = this->propogationCount <= 10 ? this->propogationCount : 10;
 	};
 	virtual ~LightPropogationPass() {}
 	/* =================
