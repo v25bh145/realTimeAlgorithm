@@ -7,9 +7,11 @@ using namespace glm;
 #define SHADOW_WIDTH 512
 #define SHADOW_HEIGHT 512
 
-// TODO: https://blog.csdn.net/qq_16555407/article/details/84307374 通过传入image变量来实现在GLSL写入采样值
-// TODO: https://blog.csdn.net/u010462297/article/details/50469950
+// 关于image以及其原子操作的使用方法
+// https://blog.csdn.net/qq_16555407/article/details/84307374
+// https://blog.csdn.net/u010462297/article/details/50469950
 // https://www.cnblogs.com/haihuahuang/p/12448092.html
+
 /* =====First Pass=====
 * opengl-settings: 开启深度测试
 * opengl-input: 光源信息(单个点光源) & 场景信息(位置+法线+kd(颜色))
@@ -37,7 +39,7 @@ public:
 /* =====LightInjectionPass Pass=====
 * 第二个pass
 * opengl-settings: 关闭深度测试
-* opengl-input: 采样点，包括其worldPos与flux信息
+* opengl-input: 立方体
 * opengl-output: 使用imageTextures进行存储的纹理 6*RGB 3D gridTexture
 */
 class LightInjectionPass : public RenderPass {
@@ -72,7 +74,7 @@ public:
 /* =====lightPropogation Pass=====
 * 第三个pass
 * opengl-settings: 关闭深度测试
-* opengl-input: 光照注入grid后所有有值的grid格子，由samplesIdxInGridTexture传入并在CPU预处理
+* opengl-input: 整个格子纹理(iGridTextureSize^3)
 * opengl-output: 使用imageTextures进行存储的纹理 6*RGB 3D gridTexture
 */
 class LightPropogationPass : public RenderPass {

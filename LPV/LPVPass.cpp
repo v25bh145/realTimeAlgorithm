@@ -38,20 +38,13 @@
 // clear VAO
 // clear FBO [!important]
 
-// TODO: GL_MAX_IMAGE_UNITS judge
+// GL_MAX_IMAGE_UNITS must >= 6
 
 void GetShadowSamplePass::initGlobalSettings()
 {
     ResourceManager::get(vec3(4.0f, 4.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -135.f, -15.f);
     // light information
     ResourceManager::get()->setPointLightInformation({ 7.0f, 5.0f, 5.0f }, { 0.6f, 0.6f, 0.6f }, 1.f, 25.f);
-
-    //int NumberOfExtensions;
-    //glGetIntegerv(GL_NUM_EXTENSIONS, &NumberOfExtensions);
-    //for (int i = 0; i < NumberOfExtensions; i++) {
-    //    const GLubyte* ccc = glGetStringi(GL_EXTENSIONS, i);
-    //    cout << ccc << endl;
-    //}
 }
 
 void GetShadowSamplePass::initShader()
